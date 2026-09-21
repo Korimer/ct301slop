@@ -54,8 +54,8 @@ bool Operation::is_valid() {
 }
 
 optional<Number> convertToNumber(string s) {
-  regex intregex = regex("^\\d+$");
-  regex floatregex = regex("^\\d*\\.\\d+$");
+  regex intregex = regex("^\\-?\\d+$");
+  regex floatregex = regex("^\\-?\\d*\\.\\d+$");
 
   if (regex_match(s, intregex)) {
     int as_int = stoi(s);
