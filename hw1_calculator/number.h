@@ -17,6 +17,8 @@ class Number {
 
     bool isInt() { return this->amIInt; }
     bool isFloat() { return !this->amIInt; }
+    int getInt() { return this->myInt.value(); }
+    float getFloat() { return this->myFloat.value(); }
     
     void print() {
       if (this->isInt()) {
@@ -32,32 +34,47 @@ class Number {
     friend Number operator+(const Number& lhs, const Number& rhs) {
       if (lhs.amIInt && rhs.amIInt) {
         return Number(lhs.myInt.value() + rhs.myInt.value());
-      }
-      else {
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) + rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() + static_cast<float>(rhs.myInt.value()));
+      } else {
         return Number(lhs.myFloat.value() + rhs.myFloat.value());
       }
     }
+
     friend Number operator-(const Number& lhs, const Number& rhs) {
       if (lhs.amIInt && rhs.amIInt) {
         return Number(lhs.myInt.value() - rhs.myInt.value());
-      }
-      else {
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) - rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() - static_cast<float>(rhs.myInt.value()));
+      } else {
         return Number(lhs.myFloat.value() - rhs.myFloat.value());
       }
     }
+
     friend Number operator*(const Number& lhs, const Number& rhs) {
       if (lhs.amIInt && rhs.amIInt) {
         return Number(lhs.myInt.value() * rhs.myInt.value());
-      }
-      else {
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) * rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() * static_cast<float>(rhs.myInt.value()));
+      } else {
         return Number(lhs.myFloat.value() * rhs.myFloat.value());
       }
     }
+
     friend Number operator/(const Number& lhs, const Number& rhs) {
       if (lhs.amIInt && rhs.amIInt) {
         return Number(lhs.myInt.value() / rhs.myInt.value());
-      }
-      else {
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) / rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() / static_cast<float>(rhs.myInt.value()));
+      } else {
         return Number(lhs.myFloat.value() / rhs.myFloat.value());
       }
     }

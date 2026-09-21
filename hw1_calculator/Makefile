@@ -11,12 +11,12 @@ Debug = -g
 HWNUM = HW1
 
 # Rename this to the name of your main file
-SRC = **.cpp
+SRC = **.cpp **.h
 # Currently Unused Utility. You will add your own headerfiles as they become relevant
 # HEADER = 
 
 #Update this with your first and last name
-TARNAME = firstname_lastname
+TARNAME = kaden_love
 
 # Target Name. This will be the name of the executable created by running "Make"
 TARGET = calculator

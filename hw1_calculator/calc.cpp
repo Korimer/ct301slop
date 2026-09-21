@@ -23,6 +23,9 @@ int main(int argc, char* argv[] ) {
     while (true) {
       optional<Operation> opr = lineToOperation(file);
       if (opr.has_value()) {
+        if (!opr.value().is_valid()) {
+          exit(line_count+2);
+        }
         all_oprs.push_back(opr.value());
         line_count++;
       }
@@ -37,6 +40,9 @@ int main(int argc, char* argv[] ) {
   }
   else if (argc == 4) {
     Operation opr_convert = convert_or_exit(argv[1], argv[2], argv[3]);
+    if (!opr_convert.is_valid()) {
+      exit(3);
+    }
     all_oprs.push_back(opr_convert);
   }
 

@@ -8,9 +8,8 @@ using namespace std;
 
 
 class BasicOperator {
-  private:
-    string chr;
   public:
+    string chr;
     BasicOperator(string op);
 
     static bool is_operator(string chr);
@@ -27,6 +26,7 @@ class Operation {
     Operation(Number lhs, BasicOperator op, Number rhs):
       lhs(lhs), op(op), rhs(rhs) {}
 
+    bool is_valid();
     Number compute();
 };
 

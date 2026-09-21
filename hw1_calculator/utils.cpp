@@ -36,6 +36,22 @@ Number BasicOperator::operate(Number lhs, Number rhs) {
 Number Operation::compute() {
   return this->op.operate(this->lhs,this->rhs);
 }
+bool Operation::is_valid() {
+  if (this->op.chr == "/") {
+    if ((this->rhs.isInt() && rhs.getInt() == 0)
+        || (this->rhs.isFloat() && rhs.getFloat() == 0.0))
+    {
+      return false;
+    }
+  }
+  if (this->op.chr == "%") {
+    if (this->lhs.isFloat() || this->rhs.isFloat()) {
+      std::cerr << "Error: modulo operator requires integers only." << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
 
 optional<Number> convertToNumber(string s) {
   regex intregex = regex("^\\d+$");
