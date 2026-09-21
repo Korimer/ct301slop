@@ -41,7 +41,7 @@ int main(int argc, char* argv[] ) {
   }
 
   for (size_t i=0; i<all_oprs.size(); i++) {
-    cout << all_oprs[i].compute() << endl;
+    all_oprs[i].compute().print();
   }
 
   return 0;

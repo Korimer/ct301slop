@@ -62,4 +62,13 @@ class Number {
       }
     }
 
+    friend Number operator%(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() % rhs.myInt.value());
+      }
+      else {
+        std::cerr << "Error: attempted to use modulo operator on a float" << std::endl;
+        exit(1);
+      }
+    }
 };
