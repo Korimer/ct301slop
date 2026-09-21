@@ -41,6 +41,7 @@ bool Operation::is_valid() {
     if ((this->rhs.isInt() && rhs.getInt() == 0)
         || (this->rhs.isFloat() && rhs.getFloat() == 0.0))
     {
+      std::cerr << "Error: cannot divide by 0." << std::endl;
       return false;
     }
   }

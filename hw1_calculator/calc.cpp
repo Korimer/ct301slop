@@ -32,9 +32,6 @@ int main(int argc, char* argv[] ) {
       }
       optional<Operation> opr = lineToOperation(line);
       if (opr.has_value()) {
-        if (!opr.value().is_valid()) {
-          exit(line_count+2);
-        }
         all_oprs.push_back(opr.value());
         line_count++;
       }
@@ -60,6 +57,10 @@ int main(int argc, char* argv[] ) {
   }
 
   for (size_t i=0; i<all_oprs.size(); i++) {
+    if (!all_oprs[i].is_valid()) {
+      exit(i+2);
+    }
+
     all_oprs[i].compute().print();
   }
 
