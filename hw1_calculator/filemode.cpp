@@ -1,6 +1,7 @@
 #include "./utils.h"
 
 #include <fstream>
+#include <sstream>
 
 optional<Operation> triadToOpr(string lhs, string op, string rhs) {
   optional<Number> lhs_convert = convertToNumber(lhs);
@@ -15,12 +16,14 @@ optional<Operation> triadToOpr(string lhs, string op, string rhs) {
   }
 }
 
-optional<Operation> lineToOperation(std::ifstream& file) {
+// Thanks to https://www.geeksforgeeks.org/cpp/stringstream-c-applications/
+optional<Operation> lineToOperation(string line) {
+  stringstream sstream = stringstream(line);
   string lhs, op, rhs;
   try {
-    file >> lhs;
-    file >> op;
-    file >> rhs;
+    sstream >> lhs;
+    sstream >> op;
+    sstream >> rhs;
     return triadToOpr(lhs, op, rhs);
   } catch (...) {
     return nullopt;

@@ -1,0 +1,347 @@
+
+    Directory: /home/korimer/Sync/School/ct301/hw1_calculator
+
+UnixMode         User Group         LastWriteTime         Size Name
+--------         ---- -----         -------------         ---- ----
+-rw-r--r--    korimer korimer     9/20/2026 21:07         1281 calc.cpp
+#include "./filemode.h"
+#include "./termmode.h"
+
+#include <cstddef>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <optional>
+#include <string>
+#include <vector>
+using namespace std;
+
+int main(int argc, char* argv[] ) {
+  vector<Operation> all_oprs;
+
+  if (argc == 1) {
+    std::cout << "misuse" << std::endl;
+    return 1; 
+  }
+  else if (argc == 2) {
+    ifstream file = ifstream(argv[1]);
+    int line_count = 1;
+    while (true) {
+      optional<Operation> opr = lineToOperation(file);
+      if (opr.has_value()) {
+        if (!opr.value().is_valid()) {
+          exit(line_count+2);
+        }
+        all_oprs.push_back(opr.value());
+        line_count++;
+      }
+      else {
+        if (!file.eof()) {
+          std::cerr << "Exited prematurely due to error on line " << line_count << std::endl;
+          exit(line_count+2);
+        }
+        break;
+      }
+    }
+  }
+  else if (argc == 4) {
+    Operation opr_convert = convert_or_exit(argv[1], argv[2], argv[3]);
+    if (!opr_convert.is_valid()) {
+      exit(4);
+    }
+    all_oprs.push_back(opr_convert);
+  }
+  else {
+    std::cerr << "Incorrect argument count. Submit 0, 1, or 3.";
+    exit(2);
+  }
+
+  for (size_t i=0; i<all_oprs.size(); i++) {
+    all_oprs[i].compute().print();
+  }
+
+  return 0;
+} 
+-rw-r--r--    korimer korimer     9/20/2026 20:30          782 filemode.cpp
+#include "./utils.h"
+
+#include <fstream>
+
+optional<Operation> triadToOpr(string lhs, string op, string rhs) {
+  optional<Number> lhs_convert = convertToNumber(lhs);
+  optional<BasicOperator> op_convert = convertToBasicOperation(op);
+  optional<Number> rhs_convert = convertToNumber(rhs);
+  if (lhs_convert.has_value() && op_convert.has_value() && rhs_convert.has_value()) {
+    Operation operation = Operation(lhs_convert.value(), op_convert.value(), rhs_convert.value());
+    return optional<Operation>(operation);
+  }
+  else {
+    return std::nullopt;
+  }
+}
+
+optional<Operation> lineToOperation(std::ifstream& file) {
+  string lhs, op, rhs;
+  try {
+    file >> lhs;
+    file >> op;
+    file >> rhs;
+    return triadToOpr(lhs, op, rhs);
+  } catch (...) {
+    return nullopt;
+  }
+}
+-rw-r--r--    korimer korimer     9/20/2026 20:39          752 termmode.cpp
+#include "./utils.h"
+#include <cstdlib>
+#include <optional>
+#include <string>
+
+typedef BasicOperator BOp;
+
+Operation convert_or_exit(string lhs, string op, string rhs) {
+  optional<Number> opt_lhs = convertToNumber(lhs);
+  if (!opt_lhs.has_value()) {
+    std::cout << "Error parsing lhs value " << lhs << std::endl;
+    exit(3);
+  }
+
+  optional<BOp> opt_op;
+  if (!BOp::is_operator(op)) {
+    std::cout << "Error parsing operator value " << op << std::endl;
+    exit(4);
+  }
+  else {
+    opt_op = BOp(op);
+  }
+
+  optional<Number> opt_rhs = convertToNumber(rhs);
+  if (!opt_rhs.has_value()) {
+    std::cout << "Error parsing operator value " << rhs << std::endl;
+    exit(5);
+  }
+
+  return Operation(opt_lhs.value(), opt_op.value(), opt_rhs.value());
+}
+-rw-r--r--    korimer korimer     9/20/2026 21:03         1826 utils.cpp
+#include "utils.h"
+#include "number.h"
+
+#include <regex>
+#include <stdexcept>
+#include <string>
+#include <optional>
+
+using namespace std;
+
+BasicOperator::BasicOperator(string op) {
+  if (!BasicOperator::is_operator(op)) {
+    throw runtime_error("provided operator not one of +-*/");
+  }
+  else {
+    this->chr = op;
+  }
+}
+bool BasicOperator::is_operator(string chr) {
+  return chr == "+"
+    || chr == "-"
+    || chr == "*"
+    || chr == "/"
+    || chr == "%"
+  ;
+}
+Number BasicOperator::operate(Number lhs, Number rhs) {
+  if (chr == "+") { return lhs + rhs; }
+  if (chr == "-") { return lhs - rhs; }
+  if (chr == "*") { return lhs * rhs; }
+  if (chr == "/") { return lhs / rhs; }
+  if (chr == "%") { return lhs % rhs; }
+  throw runtime_error("impossible state: operator not one of +-*/");
+}
+
+Number Operation::compute() {
+  return this->op.operate(this->lhs,this->rhs);
+}
+bool Operation::is_valid() {
+  if (this->op.chr == "/") {
+    if ((this->rhs.isInt() && rhs.getInt() == 0)
+        || (this->rhs.isFloat() && rhs.getFloat() == 0.0))
+    {
+      return false;
+    }
+  }
+  if (this->op.chr == "%") {
+    if (this->lhs.isFloat() || this->rhs.isFloat()) {
+      std::cerr << "Error: modulo operator requires integers only." << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+optional<Number> convertToNumber(string s) {
+  regex intregex = regex("^\\d+$");
+  regex floatregex = regex("^\\d*\\.\\d+$");
+
+  if (regex_match(s, intregex)) {
+    int as_int = stoi(s);
+    return optional<int>(as_int);
+  }
+  if (regex_match(s, floatregex)) {
+    float as_float = stof(s);
+    return Number(as_float);
+  }
+  else {
+    return std::nullopt;
+  }
+}
+
+optional<BasicOperator> convertToBasicOperation(string s) {
+  if (s.length() == 1 && BasicOperator::is_operator(s)) {
+    return BasicOperator(s);
+  }
+  return nullopt;
+}
+-rw-r--r--    korimer korimer     9/20/2026 15:02          246 filemode.h
+# pragma once
+# include "./utils.h"
+# include <optional>
+# include <fstream>
+# include <string>
+
+std::optional<Operation> triad_to_opr(std::string lhs, std::string op, std::string rhs);
+std::optional<Operation> lineToOperation(ifstream& stream);
+-rw-r--r--    korimer korimer     9/20/2026 21:03         3346 number.h
+# pragma once
+
+#include <iostream>
+# include <optional>
+# include <string>
+
+class Number {
+  private:
+    bool amIInt;
+    std::optional<int> myInt;
+    std::optional<float> myFloat;
+  public:
+    Number(int i):
+      amIInt(true), myInt(i), myFloat(std::nullopt) {}
+    Number(float f):
+      amIInt(false), myInt(std::nullopt), myFloat(f) {}
+
+    bool isInt() { return this->amIInt; }
+    bool isFloat() { return !this->amIInt; }
+    int getInt() { return this->myInt.value(); }
+    float getFloat() { return this->myFloat.value(); }
+    
+    void print() {
+      if (this->isInt()) {
+        std::cout << this->myInt.value() << std::endl;
+      } else {
+        std::cout << this->myFloat.value() << std::endl;
+      }
+    }
+
+    // credit to https://stackoverflow.com/questions/8475940/overloading-operator-for-printing-as-a-member
+    // and https://www.geeksforgeeks.org/cpp/operator-overloading-cpp/
+    // for the overloading tips
+    friend Number operator+(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() + rhs.myInt.value());
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) + rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() + static_cast<float>(rhs.myInt.value()));
+      } else {
+        return Number(lhs.myFloat.value() + rhs.myFloat.value());
+      }
+    }
+
+    friend Number operator-(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() - rhs.myInt.value());
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) - rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() - static_cast<float>(rhs.myInt.value()));
+      } else {
+        return Number(lhs.myFloat.value() - rhs.myFloat.value());
+      }
+    }
+
+    friend Number operator*(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() * rhs.myInt.value());
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) * rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() * static_cast<float>(rhs.myInt.value()));
+      } else {
+        return Number(lhs.myFloat.value() * rhs.myFloat.value());
+      }
+    }
+
+    friend Number operator/(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() / rhs.myInt.value());
+      } else if (lhs.amIInt && !rhs.amIInt) {
+        return Number(static_cast<float>(lhs.myInt.value()) / rhs.myFloat.value());
+      } else if (!lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myFloat.value() / static_cast<float>(rhs.myInt.value()));
+      } else {
+        return Number(lhs.myFloat.value() / rhs.myFloat.value());
+      }
+    }
+
+    friend Number operator%(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() % rhs.myInt.value());
+      }
+      else {
+        std::cerr << "Error: attempted to use modulo operator on a float" << std::endl;
+        exit(1);
+      }
+    }
+};
+-rw-r--r--    korimer korimer     9/17/2026 19:14          118 termmode.h
+# pragma once
+# include <string>
+# include "./utils.h"
+
+Operation convert_or_exit(string lhs, string op, string rhs);
+-rw-r--r--    korimer korimer     9/20/2026 20:57          605 utils.h
+# pragma once
+#include "number.h"
+
+# include <optional>
+# include <string>
+
+using namespace std;
+
+
+class BasicOperator {
+  public:
+    string chr;
+    BasicOperator(string op);
+
+    static bool is_operator(string chr);
+    Number operate(Number lhs, Number rhs);
+};
+
+class Operation {
+  private:
+    Number lhs;
+    BasicOperator op;
+    Number rhs;
+
+  public:
+    Operation(Number lhs, BasicOperator op, Number rhs):
+      lhs(lhs), op(op), rhs(rhs) {}
+
+    bool is_valid();
+    Number compute();
+};
+
+optional<Number> convertToNumber(string s);
+optional<BasicOperator> convertToBasicOperation(string s);
+
