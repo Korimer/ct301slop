@@ -1,29 +1,34 @@
 # pragma once
+#include "number.h"
+
 # include <optional>
 # include <string>
 
 using namespace std;
+
 
 class BasicOperator {
   private:
     string chr;
   public:
     BasicOperator(string op);
+
     static bool is_operator(string chr);
-    int operate(int lhs, int rhs);
+    Number operate(Number lhs, Number rhs);
 };
 
 class Operation {
   private:
-    int lhs;
+    Number lhs;
     BasicOperator op;
-    int rhs;
+    Number rhs;
 
   public:
-    Operation(int lhs, BasicOperator op, int rhs):
+    Operation(Number lhs, BasicOperator op, Number rhs):
       lhs(lhs), op(op), rhs(rhs) {}
-    int compute();
+
+    Number compute();
 };
 
-optional<int> optional_stoi(string s);
-optional<BasicOperator> optional_sto_bopr(string s);
+optional<Number> convertToNumber(string s);
+optional<BasicOperator> convertToBasicOperation(string s);

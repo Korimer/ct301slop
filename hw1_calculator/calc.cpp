@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <optional>
 #include <string>
 #include <vector>
@@ -21,14 +20,18 @@ int main(int argc, char* argv[] ) {
   else if (argc == 2) {
     ifstream file = ifstream(argv[1]);
     int line_count = 1;
-    string lhs, op, rhs;
-    while (file >> lhs >> op >> rhs) {
-      try {
-        optional<Operation> opr_convert = triad_to_opr(lhs, op, rhs);
-        all_oprs.push_back(opr_convert.value());
+    while (true) {
+      optional<Operation> opr = lineToOperation(file);
+      if (opr.has_value()) {
+        all_oprs.push_back(opr.value());
         line_count++;
-      } catch (...) {
-        exit(line_count+2);
+      }
+      else {
+        if (!file.eof()) {
+          std::cerr << "Exited prematurely due to error on line " << line_count << std::endl;
+          exit(line_count+2);
+        }
+        break;
       }
     }
   }

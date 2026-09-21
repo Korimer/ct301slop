@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "number.h"
 
 #include <stdexcept>
 #include <string>
@@ -21,15 +22,16 @@ bool BasicOperator::is_operator(string chr) {
     || chr == "/"
   ;
 }
-int BasicOperator::operate(int lhs, int rhs) {
+Number BasicOperator::operate(Number lhs, Number rhs) {
   if (chr == "+") { return lhs + rhs; }
   if (chr == "-") { return lhs - rhs; }
   if (chr == "*") { return lhs * rhs; }
   if (chr == "/") { return lhs / rhs; }
+  if (chr == "%") { return lhs % rhs; }
   throw runtime_error("impossible state: operator not one of +-*/");
 }
 
-int Operation::compute() {
+Number Operation::compute() {
   return this->op.operate(this->lhs,this->rhs);
 }
 

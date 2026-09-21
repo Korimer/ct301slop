@@ -1,0 +1,65 @@
+# pragma once
+
+#include <iostream>
+# include <optional>
+# include <string>
+
+class Number {
+  private:
+    bool amIInt;
+    std::optional<int> myInt;
+    std::optional<float> myFloat;
+  public:
+    Number(int i):
+      amIInt(true), myInt(i), myFloat(std::nullopt) {}
+    Number(float f):
+      amIInt(false), myInt(std::nullopt), myFloat(f) {}
+
+    bool isInt() { return this->amIInt; }
+    bool isFloat() { return !this->amIInt; }
+    
+    void print() {
+      if (this->isInt()) {
+        std::cout << this->myInt.value() << std::endl;
+      } else {
+        std::cout << this->myFloat.value() << std::endl;
+      }
+    }
+
+    // credit to https://stackoverflow.com/questions/8475940/overloading-operator-for-printing-as-a-member
+    // and https://www.geeksforgeeks.org/cpp/operator-overloading-cpp/
+    // for the overloading tips
+    friend Number operator+(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() + rhs.myInt.value());
+      }
+      else {
+        return Number(lhs.myFloat.value() + rhs.myFloat.value());
+      }
+    }
+    friend Number operator-(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() - rhs.myInt.value());
+      }
+      else {
+        return Number(lhs.myFloat.value() - rhs.myFloat.value());
+      }
+    }
+    friend Number operator*(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() * rhs.myInt.value());
+      }
+      else {
+        return Number(lhs.myFloat.value() * rhs.myFloat.value());
+      }
+    }
+    friend Number operator/(const Number& lhs, const Number& rhs) {
+      if (lhs.amIInt && rhs.amIInt) {
+        return Number(lhs.myInt.value() / rhs.myInt.value());
+      }
+      else {
+        return Number(lhs.myFloat.value() / rhs.myFloat.value());
+      }
+    }
+
+};
