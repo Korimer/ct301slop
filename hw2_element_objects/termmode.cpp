@@ -6,7 +6,7 @@
 typedef BasicOperator BOp;
 
 Operation convert_or_exit(string lhs, string op, string rhs) {
-  optional<Number> opt_lhs = convertToNumber(lhs);
+  optional<Element> opt_lhs = convertToElement(lhs);
   if (!opt_lhs.has_value()) {
     std::cerr << "Error parsing lhs value " << lhs << std::endl;
     exit(3);
@@ -21,7 +21,7 @@ Operation convert_or_exit(string lhs, string op, string rhs) {
     opt_op = BOp(op);
   }
 
-  optional<Number> opt_rhs = convertToNumber(rhs);
+  optional<Element> opt_rhs = convertToElement(rhs);
   if (!opt_rhs.has_value()) {
     std::cerr << "Error parsing operator value " << rhs << std::endl;
     exit(5);

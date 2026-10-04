@@ -13,22 +13,22 @@ class BasicOperator {
     BasicOperator(string op);
 
     static bool is_operator(string chr);
-    Number operate(Number lhs, Number rhs);
+    Element operate(Element lhs, Element rhs);
 };
 
 class Operation {
   private:
-    Number lhs;
+    Element lhs;
     BasicOperator op;
-    Number rhs;
+    Element rhs;
 
   public:
-    Operation(Number lhs, BasicOperator op, Number rhs):
+    Operation(Element lhs, BasicOperator op, Element rhs):
       lhs(lhs), op(op), rhs(rhs) {}
 
     bool is_valid();
-    Number compute();
+    Element compute();
 };
 
-optional<Number> convertToNumber(string s);
+optional<Element> convertToElement(string s);
 optional<BasicOperator> convertToBasicOperation(string s);

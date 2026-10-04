@@ -24,7 +24,7 @@ bool BasicOperator::is_operator(string chr) {
     || chr == "%"
   ;
 }
-Number BasicOperator::operate(Number lhs, Number rhs) {
+Element BasicOperator::operate(Element lhs, Element rhs) {
   if (chr == "+") { return lhs + rhs; }
   if (chr == "-") { return lhs - rhs; }
   if (chr == "*") { return lhs * rhs; }
@@ -33,7 +33,7 @@ Number BasicOperator::operate(Number lhs, Number rhs) {
   throw runtime_error("impossible state: operator not one of +-*/");
 }
 
-Number Operation::compute() {
+Element Operation::compute() {
   return this->op.operate(this->lhs,this->rhs);
 }
 bool Operation::is_valid() {
@@ -54,7 +54,7 @@ bool Operation::is_valid() {
   return true;
 }
 
-optional<Number> convertToNumber(string s) {
+optional<Element> convertToElement(string s) {
   regex intregex = regex("^\\-?\\d+$");
   regex floatregex = regex("^\\-?\\d*\\.\\d+$");
 
@@ -64,7 +64,7 @@ optional<Number> convertToNumber(string s) {
   }
   if (regex_match(s, floatregex)) {
     float as_float = stof(s);
-    return Number(as_float);
+    return Element(as_float);
   }
   else {
     return std::nullopt;
