@@ -35,6 +35,7 @@ Element BasicOperator::operate(Element lhs, Element rhs) {
 Element Operation::compute() {
   return this->op.operate(this->lhs,this->rhs);
 }
+
 bool Operation::is_valid() {
   if (this->op.chr == "/") {
     if ((this->rhs.IsInt() && rhs.getInt() == 0)

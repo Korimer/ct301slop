@@ -24,6 +24,7 @@ class Operation {
       lhs(lhs), op(op), rhs(rhs) {}
 
     bool is_valid();
+    bool validate();
     Element compute();
 };
 

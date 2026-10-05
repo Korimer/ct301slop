@@ -26,7 +26,7 @@ Operation convert_or_exit(string lhs, string op, string rhs) {
   optional<Element> opt_rhs = convertToElement(rhs);
   if (!opt_rhs.has_value()) {
     std::cerr << "Error parsing operator value " << rhs << std::endl;
-    exit(5);
+    exit(3);
   }
 
   return Operation(opt_lhs.value(), opt_op.value(), opt_rhs.value());

@@ -66,6 +66,12 @@ bool Element::canConvertToElement(const std::string &s) {
   }
 }
 
+void isNotZero(const Element& rhs) {
+  if ((rhs.IsInt() && (rhs.getInt() == 0)) || (rhs.IsDouble() && (rhs.getDouble() == 0.0))) {
+    throw std::domain_error("rhs is zero on division or modulo!");
+  }
+}
+
 Element operator+(const Element& lhs, const Element& rhs) {
   if (lhs.amIInt && rhs.amIInt) {
     return Element(lhs.myInt.value() + rhs.myInt.value());
@@ -103,9 +109,7 @@ Element operator*(const Element& lhs, const Element& rhs) {
 }
 
 Element operator/(const Element& lhs, const Element& rhs) {
-  if ((rhs.amIInt && rhs.getInt() == 0) || (!rhs.amIInt && rhs.getDouble() == 0.0)) {
-    throw std::domain_error("Division by 0 attempted!");
-  }
+  isNotZero(rhs);
   if (lhs.amIInt && rhs.amIInt) {
     return Element(lhs.myInt.value() / rhs.myInt.value());
   } else if (lhs.amIInt && !rhs.amIInt) {
@@ -118,6 +122,7 @@ Element operator/(const Element& lhs, const Element& rhs) {
 }
 
 Element operator%(const Element& lhs, const Element& rhs) {
+  isNotZero(rhs);
   if (lhs.amIInt && rhs.amIInt) {
     return Element(lhs.myInt.value() % rhs.myInt.value());
   }

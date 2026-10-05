@@ -43,26 +43,27 @@ int main(int argc, char* argv[] ) {
         break;
       }
     }
+    for (size_t i=0; i<all_oprs.size(); i++) {
+      if (!all_oprs[i].is_valid()) {
+        exit(i+2);
+      }
+
+      all_oprs[i].compute().print();
+    }
   }
   else if (argc == 4) {
     Operation opr_convert = convert_or_exit(argv[1], argv[2], argv[3]);
-    if (!opr_convert.is_valid()) {
-      exit(4);
+    try {
+      opr_convert.compute();
+    } catch (...) {
+      exit(5);
     }
-    all_oprs.push_back(opr_convert);
   }
   else {
     std::cerr << "Incorrect argument count. Submit 0, 1, or 3.";
     exit(2);
   }
 
-  for (size_t i=0; i<all_oprs.size(); i++) {
-    if (!all_oprs[i].is_valid()) {
-      exit(i+2);
-    }
 
-    all_oprs[i].compute().print();
-  }
-
-  return 0;
+  exit(0);
 } 
