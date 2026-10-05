@@ -5,6 +5,8 @@
 
 typedef BasicOperator BOp;
 
+using namespace std;
+
 Operation convert_or_exit(string lhs, string op, string rhs) {
   optional<Element> opt_lhs = convertToElement(lhs);
   if (!opt_lhs.has_value()) {

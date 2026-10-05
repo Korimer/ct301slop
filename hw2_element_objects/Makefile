@@ -11,21 +11,28 @@ Debug = -g
 HWNUM = HW2
 
 # Rename this to the name of your main file
-SRC = **.cpp **.h
-# Currently Unused Utility. You will add your own headerfiles as they become relevant
-# HEADER = 
+MAIN = calc.cpp
+SRC = $(filter-out $(MAIN), $(wildcard *.cpp))
+HEADER =  $(wildcard *.h)
+OBJ = $(SRC:.cpp=.o)
 
 #Update this with your first and last name
 TARNAME = kaden_love
 
 # Target Name. This will be the name of the executable created by running "Make"
-TARGET = element
+TARGET = calculator
 # The DEFAULT_GOAL variable will make it so that running "make" without any arguments will run "make calculator"
 .DEFAULT_GOAL := $(Target)
 
 # compile
-$(TARGET): $(SRC)
-	$(GPP) $(GPPFlags) $(SRC) -o $(TARGET) 
+$(TARGET): $(HWNUM).a
+	$(GPP) $(GPPFlags) -o $(TARGET) $(MAIN) $<
+
+%.o: %.cpp $(HEADER)
+	$(GPP) $(GPPFlags) -c $< -o $@
+
+$(HWNUM).a: $(OBJ)
+	ar -rcs $(HWNUM).a $^
 
 # clean
 # Running make clean should clean up any unnecessary components
@@ -39,6 +46,6 @@ debug: $(SRC)
 	@echo "Compiled Debug"
 
 package:
-	tar -c Makefile $(SRC) -f $(HWNUM)_$(TARNAME).tar
+#	tar -c Makefile $(SRC) -f $(HWNUM)_$(TARNAME).tar
 # 	Uncomment the Below line when you add headerfiles and comment out the above line
-# 	tar -c Makefile $(SRC) $(HEADER) -f $(HWNUM)_$(TARNAME).tar 
+	tar -c Makefile $(SRC) $(HEADER) -f $(HWNUM)_$(TARNAME).tar 

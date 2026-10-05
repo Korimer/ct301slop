@@ -3,4 +3,4 @@
 # include <optional>
 # include <string>
 
-std::optional<Operation> lineToOperation(string stream);
+std::optional<Operation> lineToOperation(std::string stream);

@@ -1,18 +1,15 @@
 # pragma once
-#include "number.h"
+#include "element.h"
 
 # include <optional>
 # include <string>
 
-using namespace std;
-
-
 class BasicOperator {
   public:
-    string chr;
-    BasicOperator(string op);
+    std::string chr;
+    BasicOperator(std::string op);
 
-    static bool is_operator(string chr);
+    static bool is_operator(std::string chr);
     Element operate(Element lhs, Element rhs);
 };
 
@@ -30,5 +27,5 @@ class Operation {
     Element compute();
 };
 
-optional<Element> convertToElement(string s);
-optional<BasicOperator> convertToBasicOperation(string s);
+std::optional<Element> convertToElement(std::string s);
+std::optional<BasicOperator> convertToBasicOperation(std::string s);
