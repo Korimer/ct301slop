@@ -22,7 +22,7 @@ TARNAME = kaden_love
 # Target Name. This will be the name of the executable created by running "Make"
 TARGET = calculator
 # The DEFAULT_GOAL variable will make it so that running "make" without any arguments will run "make calculator"
-.DEFAULT_GOAL := $(Target)
+.DEFAULT_GOAL := $(TARGET)
 
 # compile
 $(TARGET): $(HWNUM).a
@@ -46,6 +46,5 @@ debug: $(SRC)
 	@echo "Compiled Debug"
 
 package:
-#	tar -c Makefile $(SRC) -f $(HWNUM)_$(TARNAME).tar
-# 	Uncomment the Below line when you add headerfiles and comment out the above line
-	tar -c Makefile $(SRC) $(HEADER) -f $(HWNUM)_$(TARNAME).tar 
+	tar -c Makefile $(SRC) $(MAIN) $(HEADER) -f $(HWNUM)_$(TARNAME).tar
+	@echo "Packaged all source, header, and Makefile files into $(HWNUM)_$(TARNAME).tar"

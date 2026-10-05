@@ -38,15 +38,15 @@ Element Operation::compute() {
 }
 bool Operation::is_valid() {
   if (this->op.chr == "/") {
-    if ((this->rhs.isInt() && rhs.getInt() == 0)
-        || (this->rhs.isFloat() && rhs.getFloat() == 0.0))
+    if ((this->rhs.IsInt() && rhs.getInt() == 0)
+        || (this->rhs.IsFloat() && rhs.getFloat() == 0.0))
     {
       std::cerr << "Error: cannot divide by 0." << std::endl;
       return false;
     }
   }
   if (this->op.chr == "%") {
-    if (this->lhs.isFloat() || this->rhs.isFloat()) {
+    if (this->lhs.IsFloat() || this->rhs.IsFloat()) {
       std::cerr << "Error: modulo operator requires integers only." << std::endl;
       return false;
     }
@@ -54,21 +54,12 @@ bool Operation::is_valid() {
   return true;
 }
 
-optional<Element> convertToElement(string s) {
-  regex intregex = regex("^\\-?\\d+$");
-  regex floatregex = regex("^\\-?\\d*\\.\\d+$");
 
-  if (regex_match(s, intregex)) {
-    int as_int = stoi(s);
-    return optional<int>(as_int);
+optional<Element> convertToElement(string s) {
+  if (Element::canConvertToElement(s)) {
+    return Element(s);
   }
-  if (regex_match(s, floatregex)) {
-    float as_float = stof(s);
-    return Element(as_float);
-  }
-  else {
-    return std::nullopt;
-  }
+  return nullopt;
 }
 
 optional<BasicOperator> convertToBasicOperation(string s) {

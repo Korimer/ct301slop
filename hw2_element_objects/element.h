@@ -14,17 +14,23 @@ class Element {
       amIInt(true), myInt(i), myFloat(std::nullopt) {}
     Element(float f):
       amIInt(false), myInt(std::nullopt), myFloat(f) {}
-    Element(const std::string& newVal) {
-      
-    }
+    Element(const std::string& newVal);
 
-    bool isInt() { return this->amIInt; }
-    bool isFloat() { return !this->amIInt; }
+    static bool canConvertToElement(const std::string &s);
+
+    bool IsInt() { return this->amIInt; }
+    bool IsFloat() { return !this->amIInt; }
     int getInt() { return this->myInt.value(); }
     float getFloat() { return this->myFloat.value(); }
+
+    const double Value();
+    const int IntValue();
+    const double DoubleValue();
+    void Value(double newVal);
+    void ChangeType();
     
     void print() {
-      if (this->isInt()) {
+      if (this->IsInt()) {
         std::cout << this->myInt.value() << std::endl;
       } else {
         std::cout << this->myFloat.value() << std::endl;
