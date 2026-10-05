@@ -8,24 +8,24 @@ class Element {
   private:
     bool amIInt;
     std::optional<int> myInt;
-    std::optional<float> myFloat;
+    std::optional<double> myDouble;
   public:
     Element(int i):
-      amIInt(true), myInt(i), myFloat(std::nullopt) {}
-    Element(float f):
-      amIInt(false), myInt(std::nullopt), myFloat(f) {}
+      amIInt(true), myInt(i), myDouble(std::nullopt) {}
+    Element(double f):
+      amIInt(false), myInt(std::nullopt), myDouble(f) {}
     Element(const std::string& newVal);
 
     static bool canConvertToElement(const std::string &s);
 
-    bool IsInt() { return this->amIInt; }
-    bool IsFloat() { return !this->amIInt; }
-    int getInt() { return this->myInt.value(); }
-    float getFloat() { return this->myFloat.value(); }
+    bool IsInt() const { return this->amIInt; }
+    bool IsDouble() const { return !this->amIInt; }
+    int getInt() const { return this->myInt.value(); }
+    double getDouble() const { return this->myDouble.value(); }
 
-    const double Value();
-    const int IntValue();
-    const double DoubleValue();
+    double Value() const ;
+    int IntValue() const ;
+    double DoubleValue() const ;
     void Value(double newVal);
     void ChangeType();
     
@@ -33,7 +33,7 @@ class Element {
       if (this->IsInt()) {
         std::cout << this->myInt.value() << std::endl;
       } else {
-        std::cout << this->myFloat.value() << std::endl;
+        std::cout << this->myDouble.value() << std::endl;
       }
     }
 
@@ -45,5 +45,6 @@ class Element {
     friend Element operator*(const Element& lhs, const Element& rhs);
     friend Element operator/(const Element& lhs, const Element& rhs);
     friend Element operator%(const Element& lhs, const Element& rhs);
+    friend std::ostream& operator<<(std::ostream& os, const Element& e);
 };
 

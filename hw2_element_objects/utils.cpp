@@ -1,7 +1,6 @@
 #include "utils.h"
 #include "element.h"
 
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <optional>
@@ -39,14 +38,14 @@ Element Operation::compute() {
 bool Operation::is_valid() {
   if (this->op.chr == "/") {
     if ((this->rhs.IsInt() && rhs.getInt() == 0)
-        || (this->rhs.IsFloat() && rhs.getFloat() == 0.0))
+        || (this->rhs.IsDouble() && rhs.getDouble() == 0.0))
     {
       std::cerr << "Error: cannot divide by 0." << std::endl;
       return false;
     }
   }
   if (this->op.chr == "%") {
-    if (this->lhs.IsFloat() || this->rhs.IsFloat()) {
+    if (this->lhs.IsDouble() || this->rhs.IsDouble()) {
       std::cerr << "Error: modulo operator requires integers only." << std::endl;
       return false;
     }
