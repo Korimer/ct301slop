@@ -18,6 +18,7 @@ OBJ = $(SRC:.cpp=.o)
 
 #Update this with your first and last name
 TARNAME = kaden_love
+TARFULLNAME = $(HWNUM)_$(TARNAME).tar
 
 # Target Name. This will be the name of the executable created by running "Make"
 TARGET = calculator
@@ -37,7 +38,7 @@ $(HWNUM).a: $(OBJ)
 # clean
 # Running make clean should clean up any unnecessary components
 clean:
-	rm -f $(TARGET) *.o *.a
+	rm -f $(TARGET) *.o *.a $(TARFULLNAME)
 	@echo "Removed all object files."
 
 # Debug option "make debug". This enables the GNU Debugger "gdb"
@@ -46,5 +47,5 @@ debug: $(SRC)
 	@echo "Compiled Debug"
 
 package:
-	tar -c Makefile $(SRC) $(MAIN) $(HEADER) -f $(HWNUM)_$(TARNAME).tar
+	tar -c Makefile $(SRC) $(MAIN) $(HEADER) -f $(TARFULLNAME)
 	@echo "Packaged all source, header, and Makefile files into $(HWNUM)_$(TARNAME).tar"
