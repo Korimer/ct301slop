@@ -21,9 +21,9 @@ class Operation : public Element {
       Operation(parseOperation(element)) {};
 
     Operation(const Element& leftElem, Operator opChar, const Element& rightElem):
-      Element(leftElem),
+      Element(opChar.operate(leftElem, rightElem)),
       lhs(new Element(leftElem)), op(new Operator(opChar)), rhs(new Element(rightElem))
-    {};
+      {};
 
     Operation(const Operation& other);
     Operation& operator= (Operation other);

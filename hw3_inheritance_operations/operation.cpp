@@ -49,6 +49,7 @@ Operation& Operation::operator=(Operation other) {
   swap(*this,other);
   return *this;
 }
+
 Operation::~Operation() {
   delete lhs;
   delete op;
@@ -60,7 +61,7 @@ ostream& operator<<(ostream& os, const Operation& op) {
 
 Element Operation::compute() const {
   this->check_valid();
-  return this->op->operate(*(this->lhs),*(this->rhs));
+  return *this;
 }
 
 void Operation::check_valid() const {
@@ -79,19 +80,19 @@ void Operation::check_valid() const {
 // Bro...
 
 double Operation::Value() const {
-  return this->Value();
+  return this->compute().Value();
 }
 int Operation::IntValue() const {
-  return this->IntValue();
+  return this->compute().IntValue();
 }
 double Operation::DoubleValue() const {
-  return this->DoubleValue();
+  return this->compute().DoubleValue();
 }
 bool Operation::IsInt() const {
-  return this->IsInt();
+  return this->compute().IsInt();
 }
 bool Operation::IsDouble() const {
-  return this->IsDouble();
+  return this->compute().IsDouble();
 }
 Operation* Operation::Clone() const {
   return new Operation(*this);

@@ -3,7 +3,7 @@
 
 UnixMode         User Group         LastWriteTime         Size Name
 --------         ---- -----         -------------         ---- ----
--rw-r--r--    korimer korimer    10/18/2026 22:33         1902 calc.cpp
+-rw-r--r--    korimer korimer    10/18/2026 22:55         1829 calc.cpp
 #include "./operation.h"
 #include "./exceptions.h"
 
@@ -49,12 +49,7 @@ int main(int argc, char* argv[] ) {
     }
 
     for (size_t i=0; i<all_oprs.size(); i++) {
-      try {
-        std::cout << all_oprs[i].compute() << std::endl;
-      }
-      catch (...) {
-        exit(i+3);
-      }
+      std::cout << all_oprs[i].Value() << std::endl;
     }
   }
   else if (argc == 4) {
@@ -63,7 +58,7 @@ int main(int argc, char* argv[] ) {
       Operator op = string(argv[2]);
       Element rhs = string(argv[3]);
       Operation opr = Operation(lhs, op, rhs);
-      std::cout << opr.compute() << std::endl;
+      std::cout << opr.Value() << std::endl;
     } catch (InvalidElement&) {
       std::cerr << "Invalid Element!";
       exit(3);
@@ -86,7 +81,7 @@ int main(int argc, char* argv[] ) {
 
   exit(0);
 } 
--rw-r--r--    korimer korimer    10/18/2026 21:59         4188 element.cpp
+-rw-r--r--    korimer korimer    10/18/2026 22:38         4245 element.cpp
 #include "./element.h"
 #include <iostream>
 #include <optional>
@@ -117,9 +112,11 @@ void Element::ChangeType() {
   if (this->IsInt()) {
     this->myDouble = static_cast<double>(this->getInt());
     this->amIInt = false;
+    this->myInt = nullopt;
   } else {
     this->myInt = static_cast<int>(this->getDouble());
     this->amIInt = true;
+    this->myDouble = nullopt;
   }
 }
 
@@ -315,7 +312,7 @@ class ModuloByDoubleError : public std::domain_error {
   public:
     using std::domain_error::domain_error;
 };
--rw-------    korimer korimer    10/18/2026 21:03         1358 Makefile
+-rw-------    korimer korimer    10/18/2026 22:39         1358 Makefile
 # Compiler
 GPP = g++
 
@@ -361,13 +358,13 @@ clean:
 
 # Debug option "make debug". This enables the GNU Debugger "gdb"
 debug: $(SRC)
-	$(GPP) $(GPPFlags) ($SRC) $(Debug) -o $(TARGET)
+	$(GPP) $(GPPFlags) $(SRC) $(Debug) -o $(TARGET)
 	@echo "Compiled Debug"
 
 package:
 	tar -c Makefile $(SRC) $(MAIN) $(HEADER) -f $(TARFULLNAME)
 	@echo "Packaged all source, header, and Makefile files into $(HWNUM)_$(TARNAME).tar"
--rw-r--r--    korimer korimer    10/18/2026 22:30         2261 operation.cpp
+-rw-r--r--    korimer korimer    10/18/2026 22:54         2484 operation.cpp
 #include "exceptions.h"
 #include "operation.h"
 #include "element.h"
@@ -377,26 +374,27 @@ using namespace std;
 
 Operation Operation::parseOperation(const string& element) {
   istringstream readable = istringstream(element);
-  string lhs,op,rhs;
+  string lhs_s,op_s,rhs_s;
 
-  if(!(readable >> lhs >> op >> rhs)) {
+  if(!(readable >> lhs_s >> op_s >> rhs_s)) {
     throw InsufficientArgumentCount("Too few arguments in string " + element);
   }
 
-  if (!(Element::canConvertToElement(lhs) )) {
-    throw InvalidElement("lhs element " + lhs + " is invalid!");
+  if (!(Element::canConvertToElement(lhs_s) )) {
+    throw InvalidElement("lhs element " + lhs_s + " is invalid!");
   }
-  if (!(Operator::is_operator(op))) {
-    throw InvalidOperator("operator " + op + " is invalid!");
+  if (!(Operator::is_operator(op_s))) {
+    throw InvalidOperator("operator " + op_s + " is invalid!");
   }
-  if (!(Element::canConvertToElement(rhs) )) {
-    throw InvalidElement("rhs element " + rhs + " is invalid!");
+  if (!(Element::canConvertToElement(rhs_s) )) {
+    throw InvalidElement("rhs element " + rhs_s + " is invalid!");
   }
-  return Operation(
-    new Element(lhs),
-    new Operator(op),
-    new Element(rhs)
-  );
+  Element* lhs = new Element(lhs_s);
+  Operator* op = new Operator(op_s);
+  Element* rhs = new Element(rhs_s);
+
+  Element computed = op->operate(*lhs, *rhs);
+  return Operation(computed, lhs, op, rhs);
 }
 
 Operation::Operation(const Operation& other)
@@ -408,6 +406,7 @@ Operation::Operation(const Operation& other)
   { }
 
 void swap(Operation& first, Operation& second) {
+  swap(static_cast<Element&>(first), static_cast<Element&>(second));
   swap(first.lhs, second.lhs);
   swap(first.op, second.op);
   swap(first.rhs, second.rhs);
@@ -447,21 +446,24 @@ void Operation::check_valid() const {
 // Bro...
 
 double Operation::Value() const {
-  return this->compute().Value();
+  return this->Value();
 }
 int Operation::IntValue() const {
-  return this->compute().IntValue();
+  return this->IntValue();
 }
 double Operation::DoubleValue() const {
-  return this->compute().DoubleValue();
+  return this->DoubleValue();
+}
+bool Operation::IsInt() const {
+  return this->IsInt();
 }
 bool Operation::IsDouble() const {
-  return this->compute().IsDouble();
+  return this->IsDouble();
 }
 Operation* Operation::Clone() const {
   return new Operation(*this);
 }
--rw-r--r--    korimer korimer    10/18/2026 22:31         1317 operation.h
+-rw-r--r--    korimer korimer    10/18/2026 22:49         1249 operation.h
 #pragma once
 
 #include "element.h"
@@ -474,14 +476,9 @@ class Operation : public Element {
     Operator* op;
     Element* rhs;
 
-    Operation(Element* lhs, Operator* op, Element* rhs):
-      Element(*lhs), lhs(lhs), op(op), rhs(rhs) {};
+    Operation(Element computed, Element* lhs, Operator* op, Element* rhs):
+      Element(computed), lhs(lhs), op(op), rhs(rhs) {};
 
-    static Operation parseOperation(
-        const std::string&,
-        const std::string&,
-        const std::string&
-        );
     static Operation parseOperation(const std::string& element);
 
     friend void swap(Operation& first, Operation& second);
@@ -504,6 +501,7 @@ class Operation : public Element {
     virtual int IntValue() const override;
     virtual double DoubleValue() const override;
     virtual bool IsDouble() const override;
+    virtual bool IsInt() const override;
     virtual Operation* Clone() const override;
 
     Element compute() const;
