@@ -80,60 +80,46 @@ Element* Element::Clone() const {
 }
 
 Element operator+(const Element& lhs, const Element& rhs) {
-  if (lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myInt.value() + rhs.myInt.value());
-  } else if (lhs.amIInt && !rhs.amIInt) {
-    return Element(static_cast<double>(lhs.myInt.value()) + rhs.myDouble.value());
-  } else if (!lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myDouble.value() + static_cast<double>(rhs.myInt.value()));
-  } else {
-    return Element(lhs.myDouble.value() + rhs.myDouble.value());
+  Element value = lhs.DoubleValue() + rhs.DoubleValue();
+  if (lhs.IsInt() && rhs.IsInt()) {
+    value.ChangeType();
   }
+  return value;
 }
 
 Element operator-(const Element& lhs, const Element& rhs) {
-  if (lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myInt.value() - rhs.myInt.value());
-  } else if (lhs.amIInt && !rhs.amIInt) {
-    return Element(static_cast<double>(lhs.myInt.value()) - rhs.myDouble.value());
-  } else if (!lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myDouble.value() - static_cast<double>(rhs.myInt.value()));
-  } else {
-    return Element(lhs.myDouble.value() - rhs.myDouble.value());
+  Element value = lhs.DoubleValue() - rhs.DoubleValue();
+  if (lhs.IsInt() && rhs.IsInt()) {
+    value.ChangeType();
   }
+  return value;
 }
 
 Element operator*(const Element& lhs, const Element& rhs) {
-  if (lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myInt.value() * rhs.myInt.value());
-  } else if (lhs.amIInt && !rhs.amIInt) {
-    return Element(static_cast<double>(lhs.myInt.value()) * rhs.myDouble.value());
-  } else if (!lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myDouble.value() * static_cast<double>(rhs.myInt.value()));
-  } else {
-    return Element(lhs.myDouble.value() * rhs.myDouble.value());
+  Element value = lhs.DoubleValue() * rhs.DoubleValue();
+  if (lhs.IsInt() && rhs.IsInt()) {
+    value.ChangeType();
   }
+  return value;
 }
 
 Element operator/(const Element& lhs, const Element& rhs) {
   isNotZero(rhs);
-  if (lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myInt.value() / rhs.myInt.value());
-  } else if (lhs.amIInt && !rhs.amIInt) {
-    return Element(static_cast<double>(lhs.myInt.value()) / rhs.myDouble.value());
-  } else if (!lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myDouble.value() / static_cast<double>(rhs.myInt.value()));
-  } else {
-    return Element(lhs.myDouble.value() / rhs.myDouble.value());
+  Element value = lhs.DoubleValue() / rhs.DoubleValue();
+  if (lhs.IsInt() && rhs.IsInt()) {
+    value.ChangeType();
   }
+  return value;
 }
 
 Element operator%(const Element& lhs, const Element& rhs) {
   isNotZero(rhs);
-  if (lhs.IsInt() || rhs.IsInt()) {
+  if (lhs.IsDouble() && rhs.IsDouble()) {
     throw ModuloByDoubleError("Attempted to modulo by a double!");
   }
-  return Element(lhs.IntValue() % rhs.IntValue());
+
+  Element value = Element(lhs.IntValue() % rhs.IntValue());
+  return value;
 }
 
 ostream& operator<<(std::ostream& os, const Element& e) {
