@@ -72,6 +72,10 @@ void isNotZero(const Element& rhs) {
   }
 }
 
+Element* Element::clone() const {
+  return new Element(*this);
+}
+
 Element operator+(const Element& lhs, const Element& rhs) {
   if (lhs.amIInt && rhs.amIInt) {
     return Element(lhs.myInt.value() + rhs.myInt.value());

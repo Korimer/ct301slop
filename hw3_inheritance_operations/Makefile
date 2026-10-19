@@ -8,7 +8,7 @@ GPPFlags = $(REQUIRED) -std=c++20
 Debug = -g
 
 # source and output names
-HWNUM = HW2
+HWNUM = HW3
 
 # Rename this to the name of your main file
 MAIN = calc.cpp

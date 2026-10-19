@@ -37,6 +37,8 @@ class Element {
       }
     }
 
+    Element* clone() const;
+
     // credit to https://stackoverflow.com/questions/8475940/overloading-operator-for-printing-as-a-member
     // and https://www.geeksforgeeks.org/cpp/operator-overloading-cpp/
     // for the overloading tips

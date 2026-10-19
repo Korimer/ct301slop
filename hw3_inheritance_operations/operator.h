@@ -5,14 +5,22 @@
 
 class Operator {
   private:
-    std::string chr;
-  public:
-    Operator(std::string op);
+    char chr;
 
-    static bool is_operator(std::string chr);
-    Element operate(Element lhs, Element rhs);
+    static char toChar(std::string);
+  public:
+    Operator(std::string op):
+      Operator(toChar(op)) {};
+    Operator(char op);
+
+    static bool is_operator(const char& chr);
+    static bool is_operator(const std::string& str);
+    Element operate(const Element& lhs, const Element& rhs);
+
+    Operator* clone() const;
 
     bool requires_nonzero_rhs();
     bool requires_int();
-};
 
+    friend std::ostream& operator<<(std::ostream&, const Operator&);
+};
