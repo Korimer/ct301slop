@@ -4,20 +4,15 @@
 #include "operator.h"
 #include <string>
 
-class Operation : Element {
+class Operation : public Element {
   private:
     Element* lhs;
     Operator* op;
     Element* rhs;
 
-    Operation(Element* lhs, Operator* op, Element* rhs):
-      Element(*lhs), lhs(lhs), op(op), rhs(rhs) {};
+    Operation(Element computed, Element* lhs, Operator* op, Element* rhs):
+      Element(computed), lhs(lhs), op(op), rhs(rhs) {};
 
-    static Operation parseOperation(
-        const std::string&,
-        const std::string&,
-        const std::string&
-        );
     static Operation parseOperation(const std::string& element);
 
     friend void swap(Operation& first, Operation& second);
@@ -40,6 +35,7 @@ class Operation : Element {
     virtual int IntValue() const override;
     virtual double DoubleValue() const override;
     virtual bool IsDouble() const override;
+    virtual bool IsInt() const override;
     virtual Operation* Clone() const override;
 
     Element compute() const;

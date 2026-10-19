@@ -43,7 +43,7 @@ clean:
 
 # Debug option "make debug". This enables the GNU Debugger "gdb"
 debug: $(SRC)
-	$(GPP) $(GPPFlags) ($SRC) $(Debug) -o $(TARGET)
+	$(GPP) $(GPPFlags) $(SRC) $(Debug) -o $(TARGET)
 	@echo "Compiled Debug"
 
 package:

@@ -1,0 +1,604 @@
+
+    Directory: /home/korimer/Sync/School/ct301/hw3_inheritance_operations
+
+UnixMode         User Group         LastWriteTime         Size Name
+--------         ---- -----         -------------         ---- ----
+-rw-r--r--    korimer korimer    10/18/2026 22:33         1902 calc.cpp
+#include "./operation.h"
+#include "./exceptions.h"
+
+#include <cstddef>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+int main(int argc, char* argv[] ) {
+  vector<Operation> all_oprs;
+
+  if (argc == 1) {
+    std::cout << "No arguments presented" << std::endl;
+    exit(1);
+  }
+  else if (argc == 2) {
+    ifstream file = ifstream(argv[1]);
+    if (!file.is_open()) {
+      std::cerr << "File could not be opened." << std::endl;
+      exit(2);
+    }
+    int line_count = 1;
+    string line;
+    while (getline(file, line)) {
+      // credit to https://stackoverflow.com/a/61005054
+      if (line.size() == 0) {
+        continue;
+      }
+      try {
+        all_oprs.push_back(Operation(line));
+        line_count++;
+      }
+      catch (...) {
+        if (!file.eof()) {
+          std::cerr << "Exited prematurely due to error on line " << line_count << std::endl;
+          exit(line_count+2);
+        }
+        break;
+      }
+    }
+
+    for (size_t i=0; i<all_oprs.size(); i++) {
+      try {
+        std::cout << all_oprs[i].compute() << std::endl;
+      }
+      catch (...) {
+        exit(i+3);
+      }
+    }
+  }
+  else if (argc == 4) {
+    try {
+      Element lhs = string(argv[1]);
+      Operator op = string(argv[2]);
+      Element rhs = string(argv[3]);
+      Operation opr = Operation(lhs, op, rhs);
+      std::cout << opr.compute() << std::endl;
+    } catch (InvalidElement&) {
+      std::cerr << "Invalid Element!";
+      exit(3);
+    } catch (InvalidOperator&) {
+      std::cerr << "Invalid Operator!";
+      exit(4);
+    } catch (DivideByZeroError&) {
+      std::cerr << "Math Error occurred.";
+      exit(5);
+    } catch (ModuloByDoubleError&) {
+      std::cerr << "Math Error occurred.";
+      exit(5);
+    }
+  }
+  else {
+    std::cerr << "Incorrect argument count. Submit 0, 1, or 3.";
+    exit(2);
+  }
+
+
+  exit(0);
+} 
+-rw-r--r--    korimer korimer    10/18/2026 21:59         4188 element.cpp
+#include "./element.h"
+#include <iostream>
+#include <optional>
+#include <regex>
+
+using namespace std;
+
+double Element::Value() const {
+  if (this->IsInt()) { return this->getInt(); }
+  else { return this->getDouble(); }
+}
+int Element::IntValue() const {
+  return static_cast<int>(this->Value());
+}
+double Element::DoubleValue() const {
+  return static_cast<double>(this->Value());
+}
+void Element::Value(double newVal) {
+  if (this->IsInt()) {
+    this->myInt = static_cast<int>(newVal);
+    this->myDouble = nullopt;
+  } else {
+    this->myDouble = static_cast<double>(newVal);
+    this->myInt = nullopt;
+  }
+}
+void Element::ChangeType() {
+  if (this->IsInt()) {
+    this->myDouble = static_cast<double>(this->getInt());
+    this->amIInt = false;
+  } else {
+    this->myInt = static_cast<int>(this->getDouble());
+    this->amIInt = true;
+  }
+}
+
+
+regex intregex = regex("^\\-?\\d+$");
+regex doubleregex = regex("^\\-?\\d*\\.\\d+$");
+
+Element::Element(const std::string &s) {
+  if (std::regex_match(s, intregex)) {
+    amIInt = true;
+    myInt = std::stoi(s);
+    myDouble = std::nullopt;
+  } 
+  else if (std::regex_match(s, doubleregex)) {
+    amIInt = false;
+    myInt = std::nullopt;
+    myDouble = std::stod(s);
+  } 
+  else {
+    throw std::invalid_argument("String is neither a valid int nor a double format.");
+  }
+}
+
+bool Element::canConvertToElement(const std::string &s) {
+  if (regex_match(s, intregex)) {
+    return true;
+  }
+  if (regex_match(s, doubleregex)) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+void isNotZero(const Element& rhs) {
+  if ((rhs.IsInt() && (rhs.getInt() == 0)) || (rhs.IsDouble() && (rhs.getDouble() == 0.0))) {
+    throw std::domain_error("rhs is zero on division or modulo!");
+  }
+}
+
+Element* Element::Clone() const {
+  return new Element(*this);
+}
+
+Element operator+(const Element& lhs, const Element& rhs) {
+  if (lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myInt.value() + rhs.myInt.value());
+  } else if (lhs.amIInt && !rhs.amIInt) {
+    return Element(static_cast<double>(lhs.myInt.value()) + rhs.myDouble.value());
+  } else if (!lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myDouble.value() + static_cast<double>(rhs.myInt.value()));
+  } else {
+    return Element(lhs.myDouble.value() + rhs.myDouble.value());
+  }
+}
+
+Element operator-(const Element& lhs, const Element& rhs) {
+  if (lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myInt.value() - rhs.myInt.value());
+  } else if (lhs.amIInt && !rhs.amIInt) {
+    return Element(static_cast<double>(lhs.myInt.value()) - rhs.myDouble.value());
+  } else if (!lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myDouble.value() - static_cast<double>(rhs.myInt.value()));
+  } else {
+    return Element(lhs.myDouble.value() - rhs.myDouble.value());
+  }
+}
+
+Element operator*(const Element& lhs, const Element& rhs) {
+  if (lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myInt.value() * rhs.myInt.value());
+  } else if (lhs.amIInt && !rhs.amIInt) {
+    return Element(static_cast<double>(lhs.myInt.value()) * rhs.myDouble.value());
+  } else if (!lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myDouble.value() * static_cast<double>(rhs.myInt.value()));
+  } else {
+    return Element(lhs.myDouble.value() * rhs.myDouble.value());
+  }
+}
+
+Element operator/(const Element& lhs, const Element& rhs) {
+  isNotZero(rhs);
+  if (lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myInt.value() / rhs.myInt.value());
+  } else if (lhs.amIInt && !rhs.amIInt) {
+    return Element(static_cast<double>(lhs.myInt.value()) / rhs.myDouble.value());
+  } else if (!lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myDouble.value() / static_cast<double>(rhs.myInt.value()));
+  } else {
+    return Element(lhs.myDouble.value() / rhs.myDouble.value());
+  }
+}
+
+Element operator%(const Element& lhs, const Element& rhs) {
+  isNotZero(rhs);
+  if (lhs.amIInt && rhs.amIInt) {
+    return Element(lhs.myInt.value() % rhs.myInt.value());
+  }
+  else {
+    throw std::domain_error("Error: attempted to use modulo operator on a double");
+  }
+}
+
+ostream& operator<<(std::ostream& os, const Element& e) {
+  if (e.amIInt) {
+    os << *(e.myInt);
+  } else {
+    os << *(e.myDouble);
+  }
+  return os;
+}
+-rw-r--r--    korimer korimer    10/18/2026 21:59         1756 element.h
+# pragma once
+
+#include <iostream>
+# include <optional>
+# include <string>
+
+class Element {
+  private:
+    bool amIInt;
+    std::optional<int> myInt;
+    std::optional<double> myDouble;
+  public:
+    Element(int i):
+      amIInt(true), myInt(i), myDouble(std::nullopt) {}
+    Element(double f):
+      amIInt(false), myInt(std::nullopt), myDouble(f) {}
+    Element(const std::string& newVal);
+
+    static bool canConvertToElement(const std::string &s);
+
+    virtual bool IsInt() const { return this->amIInt; }
+    virtual bool IsDouble() const { return !this->amIInt; }
+    int getInt() const { return this->myInt.value(); }
+    double getDouble() const { return this->myDouble.value(); }
+
+    virtual double Value() const ;
+    virtual int IntValue() const ;
+    virtual double DoubleValue() const ;
+    void Value(double newVal);
+    void ChangeType();
+    
+    void print() {
+      if (this->IsInt()) {
+        std::cout << this->myInt.value() << std::endl;
+      } else {
+        std::cout << this->myDouble.value() << std::endl;
+      }
+    }
+
+    virtual Element* Clone() const;
+    virtual ~Element() = default;
+
+    // credit to https://stackoverflow.com/questions/8475940/overloading-operator-for-printing-as-a-member
+    // and https://www.geeksforgeeks.org/cpp/operator-overloading-cpp/
+    // for the overloading tips
+    friend Element operator+(const Element& lhs, const Element& rhs);
+    friend Element operator-(const Element& lhs, const Element& rhs);
+    friend Element operator*(const Element& lhs, const Element& rhs);
+    friend Element operator/(const Element& lhs, const Element& rhs);
+    friend Element operator%(const Element& lhs, const Element& rhs);
+    friend std::ostream& operator<<(std::ostream& os, const Element& e);
+};
+
+-rw-r--r--    korimer korimer    10/18/2026 21:47          626 exceptions.h
+#pragma once
+
+#include <stdexcept>
+
+class InvalidElement : public std::invalid_argument {
+  public:
+    using std::invalid_argument::invalid_argument;
+};
+
+class InvalidOperator : public std::invalid_argument {
+  public:
+    using std::invalid_argument::invalid_argument;
+};
+
+class InsufficientArgumentCount : public std::invalid_argument {
+  public:
+    using std::invalid_argument::invalid_argument;
+};
+
+class DivideByZeroError : public std::domain_error {
+  public:
+    using std::domain_error::domain_error;
+};
+
+class ModuloByDoubleError : public std::domain_error {
+  public:
+    using std::domain_error::domain_error;
+};
+-rw-------    korimer korimer    10/18/2026 21:03         1358 Makefile
+# Compiler
+GPP = g++
+
+# Compilation flags
+REQUIRED = -Wall -Wextra -Werror -Wfatal-errors
+# You can Modify the Compiler below Compiler 
+GPPFlags = $(REQUIRED) -std=c++20
+Debug = -g
+
+# source and output names
+HWNUM = HW3
+
+# Rename this to the name of your main file
+MAIN = calc.cpp
+SRC = $(filter-out $(MAIN), $(wildcard *.cpp))
+HEADER =  $(wildcard *.h)
+OBJ = $(SRC:.cpp=.o)
+
+#Update this with your first and last name
+TARNAME = kaden_love
+TARFULLNAME = $(HWNUM)_$(TARNAME).tar
+
+# Target Name. This will be the name of the executable created by running "Make"
+TARGET = calculator
+# The DEFAULT_GOAL variable will make it so that running "make" without any arguments will run "make calculator"
+.DEFAULT_GOAL := $(TARGET)
+
+# compile
+$(TARGET): $(HWNUM).a
+	$(GPP) $(GPPFlags) -o $(TARGET) $(MAIN) $<
+
+%.o: %.cpp $(HEADER)
+	$(GPP) $(GPPFlags) -c $< -o $@
+
+$(HWNUM).a: $(OBJ)
+	ar -rcs $(HWNUM).a $^
+
+# clean
+# Running make clean should clean up any unnecessary components
+clean:
+	rm -f $(TARGET) *.o *.a $(TARFULLNAME)
+	@echo "Removed all object files."
+
+# Debug option "make debug". This enables the GNU Debugger "gdb"
+debug: $(SRC)
+	$(GPP) $(GPPFlags) ($SRC) $(Debug) -o $(TARGET)
+	@echo "Compiled Debug"
+
+package:
+	tar -c Makefile $(SRC) $(MAIN) $(HEADER) -f $(TARFULLNAME)
+	@echo "Packaged all source, header, and Makefile files into $(HWNUM)_$(TARNAME).tar"
+-rw-r--r--    korimer korimer    10/18/2026 22:30         2261 operation.cpp
+#include "exceptions.h"
+#include "operation.h"
+#include "element.h"
+#include <sstream>
+
+using namespace std;
+
+Operation Operation::parseOperation(const string& element) {
+  istringstream readable = istringstream(element);
+  string lhs,op,rhs;
+
+  if(!(readable >> lhs >> op >> rhs)) {
+    throw InsufficientArgumentCount("Too few arguments in string " + element);
+  }
+
+  if (!(Element::canConvertToElement(lhs) )) {
+    throw InvalidElement("lhs element " + lhs + " is invalid!");
+  }
+  if (!(Operator::is_operator(op))) {
+    throw InvalidOperator("operator " + op + " is invalid!");
+  }
+  if (!(Element::canConvertToElement(rhs) )) {
+    throw InvalidElement("rhs element " + rhs + " is invalid!");
+  }
+  return Operation(
+    new Element(lhs),
+    new Operator(op),
+    new Element(rhs)
+  );
+}
+
+Operation::Operation(const Operation& other)
+  : 
+    Element(other),
+    lhs(other.lhs->Clone()), 
+    op (other.op ->Clone()), 
+    rhs(other.rhs->Clone())
+  { }
+
+void swap(Operation& first, Operation& second) {
+  swap(first.lhs, second.lhs);
+  swap(first.op, second.op);
+  swap(first.rhs, second.rhs);
+}
+
+Operation& Operation::operator=(Operation other) {
+  swap(*this,other);
+  return *this;
+}
+Operation::~Operation() {
+  delete lhs;
+  delete op;
+  delete rhs;
+}
+ostream& operator<<(ostream& os, const Operation& op) {
+    return os << "(" << *op.lhs << " " << *op.op << " " << *op.rhs << ")";
+}
+
+Element Operation::compute() const {
+  this->check_valid();
+  return this->op->operate(*(this->lhs),*(this->rhs));
+}
+
+void Operation::check_valid() const {
+  if (op->requires_nonzero_rhs()) {
+    if (rhs->DoubleValue() == 0.0) {
+      throw DivideByZeroError("Error: cannot divide by 0.");
+    }
+  }
+  if (op->requires_int()) {
+    if (this->lhs->IsDouble() || this->rhs->IsDouble()) {
+      throw ModuloByDoubleError("Error: modulo operator requires integers only.");
+    }
+  }
+}
+
+// Bro...
+
+double Operation::Value() const {
+  return this->compute().Value();
+}
+int Operation::IntValue() const {
+  return this->compute().IntValue();
+}
+double Operation::DoubleValue() const {
+  return this->compute().DoubleValue();
+}
+bool Operation::IsDouble() const {
+  return this->compute().IsDouble();
+}
+Operation* Operation::Clone() const {
+  return new Operation(*this);
+}
+-rw-r--r--    korimer korimer    10/18/2026 22:31         1317 operation.h
+#pragma once
+
+#include "element.h"
+#include "operator.h"
+#include <string>
+
+class Operation : public Element {
+  private:
+    Element* lhs;
+    Operator* op;
+    Element* rhs;
+
+    Operation(Element* lhs, Operator* op, Element* rhs):
+      Element(*lhs), lhs(lhs), op(op), rhs(rhs) {};
+
+    static Operation parseOperation(
+        const std::string&,
+        const std::string&,
+        const std::string&
+        );
+    static Operation parseOperation(const std::string& element);
+
+    friend void swap(Operation& first, Operation& second);
+  public:
+    Operation(const std::string& element):
+      Operation(parseOperation(element)) {};
+
+    Operation(const Element& leftElem, Operator opChar, const Element& rightElem):
+      Element(leftElem),
+      lhs(new Element(leftElem)), op(new Operator(opChar)), rhs(new Element(rightElem))
+    {};
+
+    Operation(const Operation& other);
+    Operation& operator= (Operation other);
+    virtual ~Operation();
+
+    friend std::ostream& operator<<(std::ostream&, const Operation&);
+
+    virtual double Value() const override;
+    virtual int IntValue() const override;
+    virtual double DoubleValue() const override;
+    virtual bool IsDouble() const override;
+    virtual Operation* Clone() const override;
+
+    Element compute() const;
+    void check_valid() const;
+};
+-rw-r--r--    korimer korimer    10/18/2026 22:19         1355 operator.cpp
+#include "element.h"
+#include "exceptions.h"
+#include "operator.h"
+#include <stdexcept>
+#include <string>
+
+using namespace std;
+
+Operator::Operator(char op):
+  chr(op)
+{
+  if (!is_operator(op)) {
+    throw InvalidOperator("Invalid operator character");
+  }
+}
+
+char Operator::toChar(std::string op) {
+  if (op.length() != 1) {
+    throw InvalidOperator("Invalid operator string");
+  }
+  char chr = op[0];
+  return chr;
+}
+
+bool Operator::is_operator(const char& chr) {
+  return
+    chr == '+'
+    || chr == '-'
+    || chr == '*'
+    || chr == '/'
+    || chr == '%'
+    ;
+}
+
+bool Operator::is_operator(const string& str) {
+  try {
+    return is_operator(toChar(str));
+  } catch (invalid_argument&) {
+    return false;
+  }
+}
+Element Operator::operate(const Element& lhs, const Element& rhs) {
+  if (chr == '+') { return lhs + rhs; }
+  if (chr == '-') { return lhs - rhs; }
+  if (chr == '*') { return lhs * rhs; }
+  if (chr == '/') { return lhs / rhs; }
+  if (chr == '%') { return lhs % rhs; }
+  throw runtime_error("impossible state: operator not one of +-*/");
+}
+
+Operator* Operator::Clone() const {
+  return new Operator(*this);
+}
+
+bool Operator::requires_nonzero_rhs() {
+  return chr == '/' || chr == '%';
+}
+bool Operator::requires_int() {
+  return chr == '%';
+}
+
+ostream& operator<<(ostream& os, const Operator& op) {
+    return os << string(1,op.chr);
+}
+-rw-r--r--    korimer korimer    10/18/2026 21:52          552 operator.h
+# pragma once
+
+#include "element.h"
+#include <string>
+
+class Operator {
+  private:
+    char chr;
+
+    static char toChar(std::string);
+  public:
+    Operator(std::string op):
+      Operator(toChar(op)) {};
+    Operator(char op);
+
+    static bool is_operator(const char& chr);
+    static bool is_operator(const std::string& str);
+    Element operate(const Element& lhs, const Element& rhs);
+
+    Operator* Clone() const;
+
+    bool requires_nonzero_rhs();
+    bool requires_int();
+
+    friend std::ostream& operator<<(std::ostream&, const Operator&);
+};
+

@@ -28,9 +28,11 @@ void Element::ChangeType() {
   if (this->IsInt()) {
     this->myDouble = static_cast<double>(this->getInt());
     this->amIInt = false;
+    this->myInt = nullopt;
   } else {
     this->myInt = static_cast<int>(this->getDouble());
     this->amIInt = true;
+    this->myDouble = nullopt;
   }
 }
 

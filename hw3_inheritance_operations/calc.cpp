@@ -43,12 +43,7 @@ int main(int argc, char* argv[] ) {
     }
 
     for (size_t i=0; i<all_oprs.size(); i++) {
-      try {
-        std::cout << all_oprs[i].compute() << std::endl;
-      }
-      catch (...) {
-        exit(i+3);
-      }
+      std::cout << all_oprs[i].Value() << std::endl;
     }
   }
   else if (argc == 4) {
@@ -57,7 +52,7 @@ int main(int argc, char* argv[] ) {
       Operator op = string(argv[2]);
       Element rhs = string(argv[3]);
       Operation opr = Operation(lhs, op, rhs);
-      std::cout << opr.compute() << std::endl;
+      std::cout << opr.Value() << std::endl;
     } catch (InvalidElement&) {
       std::cerr << "Invalid Element!";
       exit(3);
