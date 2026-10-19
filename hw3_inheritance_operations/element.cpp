@@ -1,4 +1,5 @@
 #include "./element.h"
+#include "exceptions.h"
 #include <iostream>
 #include <optional>
 #include <regex>
@@ -52,7 +53,7 @@ Element::Element(const std::string &s) {
     myDouble = std::stod(s);
   } 
   else {
-    throw std::invalid_argument("String is neither a valid int nor a double format.");
+    throw InvalidElement("String is neither a valid int nor a double format.");
   }
 }
 
@@ -70,7 +71,7 @@ bool Element::canConvertToElement(const std::string &s) {
 
 void isNotZero(const Element& rhs) {
   if ((rhs.IsInt() && (rhs.getInt() == 0)) || (rhs.IsDouble() && (rhs.getDouble() == 0.0))) {
-    throw std::domain_error("rhs is zero on division or modulo!");
+    throw DivideByZeroError("rhs is zero on division or modulo!");
   }
 }
 
@@ -129,12 +130,10 @@ Element operator/(const Element& lhs, const Element& rhs) {
 
 Element operator%(const Element& lhs, const Element& rhs) {
   isNotZero(rhs);
-  if (lhs.amIInt && rhs.amIInt) {
-    return Element(lhs.myInt.value() % rhs.myInt.value());
+  if (lhs.IsInt() || rhs.IsInt()) {
+    throw ModuloByDoubleError("Attempted to modulo by a double!");
   }
-  else {
-    throw std::domain_error("Error: attempted to use modulo operator on a double");
-  }
+  return Element(lhs.IntValue() % rhs.IntValue());
 }
 
 ostream& operator<<(std::ostream& os, const Element& e) {

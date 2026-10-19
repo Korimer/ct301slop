@@ -60,21 +60,7 @@ ostream& operator<<(ostream& os, const Operation& op) {
 }
 
 Element Operation::compute() const {
-  this->check_valid();
   return *this;
-}
-
-void Operation::check_valid() const {
-  if (op->requires_nonzero_rhs()) {
-    if (rhs->DoubleValue() == 0.0) {
-      throw DivideByZeroError("Error: cannot divide by 0.");
-    }
-  }
-  if (op->requires_int()) {
-    if (this->lhs->IsDouble() || this->rhs->IsDouble()) {
-      throw ModuloByDoubleError("Error: modulo operator requires integers only.");
-    }
-  }
 }
 
 // Bro...
