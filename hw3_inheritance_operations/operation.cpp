@@ -1,23 +1,9 @@
+#include "exceptions.h"
 #include "operation.h"
 #include "element.h"
-#include "exceptions.h"
 #include <sstream>
 
 using namespace std;
-
-optional<Element> convertToElement(string s) {
-  if (Element::canConvertToElement(s)) {
-    return Element(s);
-  }
-  return nullopt;
-}
-
-optional<Operator> convertToBasicOperation(string s) {
-  if (s.length() == 1 && Operator::is_operator(s)) {
-    return Operator(s);
-  }
-  return nullopt;
-}
 
 Operation Operation::parseOperation(const string& element) {
   istringstream readable = istringstream(element);
@@ -44,9 +30,11 @@ Operation Operation::parseOperation(const string& element) {
 }
 
 Operation::Operation(const Operation& other)
-  : lhs(other.lhs->clone()), 
-    op (other.op ->clone()), 
-    rhs(other.rhs->clone())
+  : 
+    Element(other),
+    lhs(other.lhs->Clone()), 
+    op (other.op ->Clone()), 
+    rhs(other.rhs->Clone())
   { }
 
 void swap(Operation& first, Operation& second) {
@@ -68,22 +56,38 @@ ostream& operator<<(ostream& os, const Operation& op) {
     return os << "(" << op.lhs << " " << op.op << " " << op.rhs << ")";
 }
 
-Element Operation::compute() {
+Element Operation::compute() const {
+  this->check_valid();
   return this->op->operate(*(this->lhs),*(this->rhs));
 }
 
-bool Operation::is_valid() {
+void Operation::check_valid() const {
   if (op->requires_nonzero_rhs()) {
     if (rhs->DoubleValue() == 0.0) {
-      std::cerr << "Error: cannot divide by 0." << std::endl;
-      return false;
+      throw DivideByZeroError("Error: cannot divide by 0.");
     }
   }
   if (op->requires_int()) {
     if (this->lhs->IsDouble() || this->rhs->IsDouble()) {
-      std::cerr << "Error: modulo operator requires integers only." << std::endl;
-      return false;
+      throw ModuloByDoubleError("Error: modulo operator requires integers only.");
     }
   }
-  return true;
+}
+
+// Bro...
+
+double Operation::Value() const {
+  return this->compute().Value();
+}
+int Operation::IntValue() const {
+  return this->compute().IntValue();
+}
+double Operation::DoubleValue() const {
+  return this->compute().DoubleValue();
+}
+bool Operation::IsDouble() const {
+  return this->compute().IsDouble();
+}
+Operation* Operation::Clone() const {
+  return new Operation(*this);
 }

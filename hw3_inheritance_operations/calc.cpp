@@ -1,11 +1,10 @@
-#include "./filemode.h"
-#include "./termmode.h"
+#include "./operation.h"
+#include "./exceptions.h"
 
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <string>
 #include <vector>
 using namespace std;
@@ -14,8 +13,8 @@ int main(int argc, char* argv[] ) {
   vector<Operation> all_oprs;
 
   if (argc == 1) {
-    std::cout << "misuse" << std::endl;
-    return 1; 
+    std::cout << "No arguments presented" << std::endl;
+    exit(1);
   }
   else if (argc == 2) {
     ifstream file = ifstream(argv[1]);
@@ -30,12 +29,11 @@ int main(int argc, char* argv[] ) {
       if (line.size() == 0) {
         continue;
       }
-      optional<Operation> opr = lineToOperation(line);
-      if (opr.has_value()) {
-        all_oprs.push_back(opr.value());
+      try {
+        all_oprs.push_back(Operation(line));
         line_count++;
       }
-      else {
+      catch (...) {
         if (!file.eof()) {
           std::cerr << "Exited prematurely due to error on line " << line_count << std::endl;
           exit(line_count+2);
@@ -43,19 +41,31 @@ int main(int argc, char* argv[] ) {
         break;
       }
     }
+
     for (size_t i=0; i<all_oprs.size(); i++) {
-      if (!all_oprs[i].is_valid()) {
+      try {
+        std::cout << all_oprs[i].compute() << std::endl;
+      }
+      catch (...) {
         exit(i+2);
       }
-
-      all_oprs[i].compute().print();
     }
   }
   else if (argc == 4) {
-    Operation opr_convert = convert_or_exit(argv[1], argv[2], argv[3]);
     try {
-      opr_convert.compute();
-    } catch (...) {
+      Element lhs = string(argv[1]);
+      Operator op = string(argv[2]);
+      Element rhs = string(argv[3]);
+      Operation opr = Operation(lhs, op, rhs);
+      std::cout << opr.compute() << std::endl;
+    } catch (InvalidElement&) {
+      std::cerr << "Invalid Element!";
+      exit(3);
+    } catch (InvalidOperator&) {
+      std::cerr << "Invalid Operator!";
+      exit(4);
+    } catch (DivideByZeroError&) {
+      std::cerr << "Math Error occurred.";
       exit(5);
     }
   }

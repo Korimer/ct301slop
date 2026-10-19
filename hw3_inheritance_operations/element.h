@@ -18,14 +18,14 @@ class Element {
 
     static bool canConvertToElement(const std::string &s);
 
-    bool IsInt() const { return this->amIInt; }
-    bool IsDouble() const { return !this->amIInt; }
+    virtual bool IsInt() const { return this->amIInt; }
+    virtual bool IsDouble() const { return !this->amIInt; }
     int getInt() const { return this->myInt.value(); }
     double getDouble() const { return this->myDouble.value(); }
 
-    double Value() const ;
-    int IntValue() const ;
-    double DoubleValue() const ;
+    virtual double Value() const ;
+    virtual int IntValue() const ;
+    virtual double DoubleValue() const ;
     void Value(double newVal);
     void ChangeType();
     
@@ -37,7 +37,8 @@ class Element {
       }
     }
 
-    Element* clone() const;
+    virtual Element* Clone() const;
+    virtual ~Element() = default;
 
     // credit to https://stackoverflow.com/questions/8475940/overloading-operator-for-printing-as-a-member
     // and https://www.geeksforgeeks.org/cpp/operator-overloading-cpp/

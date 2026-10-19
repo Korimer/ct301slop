@@ -72,7 +72,7 @@ void isNotZero(const Element& rhs) {
   }
 }
 
-Element* Element::clone() const {
+Element* Element::Clone() const {
   return new Element(*this);
 }
 

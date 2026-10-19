@@ -4,15 +4,20 @@
 #include "operator.h"
 #include <string>
 
-class Operation {
+class Operation : Element {
   private:
     Element* lhs;
     Operator* op;
     Element* rhs;
 
     Operation(Element* lhs, Operator* op, Element* rhs):
-      lhs(lhs), op(op), rhs(rhs) {};
+      Element(*lhs), lhs(lhs), op(op), rhs(rhs) {};
 
+    static Operation parseOperation(
+        const std::string&,
+        const std::string&,
+        const std::string&
+        );
     static Operation parseOperation(const std::string& element);
 
     friend void swap(Operation& first, Operation& second);
@@ -20,15 +25,23 @@ class Operation {
     Operation(const std::string& element):
       Operation(parseOperation(element)) {};
 
-    Operation(const Element& leftElem, char opChar, const Element& rightElem);
-    
-    // Rule of Three / Big Three implementation
+    Operation(const Element& leftElem, Operator opChar, const Element& rightElem):
+      Element(leftElem),
+      lhs(new Element(leftElem)), op(new Operator(opChar)), rhs(new Element(rightElem))
+    {};
+
     Operation(const Operation& other);
     Operation& operator= (Operation other);
     virtual ~Operation();
 
     friend std::ostream& operator<<(std::ostream&, const Operation&);
 
-    Element compute();
-    bool is_valid();
+    virtual double Value() const override;
+    virtual int IntValue() const override;
+    virtual double DoubleValue() const override;
+    virtual bool IsDouble() const override;
+    virtual Operation* Clone() const override;
+
+    Element compute() const;
+    void check_valid() const;
 };

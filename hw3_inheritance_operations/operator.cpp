@@ -47,7 +47,7 @@ Element Operator::operate(const Element& lhs, const Element& rhs) {
   throw runtime_error("impossible state: operator not one of +-*/");
 }
 
-Operator* Operator::clone() const {
+Operator* Operator::Clone() const {
   return new Operator(*this);
 }
 

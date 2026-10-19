@@ -17,7 +17,7 @@ class Operator {
     static bool is_operator(const std::string& str);
     Element operate(const Element& lhs, const Element& rhs);
 
-    Operator* clone() const;
+    Operator* Clone() const;
 
     bool requires_nonzero_rhs();
     bool requires_int();
