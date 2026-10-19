@@ -1,4 +1,5 @@
 #include "element.h"
+#include "exceptions.h"
 #include "operator.h"
 #include <stdexcept>
 #include <string>
@@ -9,13 +10,13 @@ Operator::Operator(char op):
   chr(op)
 {
   if (!is_operator(op)) {
-    throw std::invalid_argument("Invalid operator character");
+    throw InvalidOperator("Invalid operator character");
   }
 }
 
 char Operator::toChar(std::string op) {
   if (op.length() != 1) {
-    throw std::invalid_argument("Invalid operator string");
+    throw InvalidOperator("Invalid operator string");
   }
   char chr = op[0];
   return chr;

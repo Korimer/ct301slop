@@ -47,7 +47,7 @@ int main(int argc, char* argv[] ) {
         std::cout << all_oprs[i].compute() << std::endl;
       }
       catch (...) {
-        exit(i+2);
+        exit(i+3);
       }
     }
   }
@@ -65,6 +65,9 @@ int main(int argc, char* argv[] ) {
       std::cerr << "Invalid Operator!";
       exit(4);
     } catch (DivideByZeroError&) {
+      std::cerr << "Math Error occurred.";
+      exit(5);
+    } catch (ModuloByDoubleError&) {
       std::cerr << "Math Error occurred.";
       exit(5);
     }
