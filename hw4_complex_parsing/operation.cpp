@@ -1,0 +1,86 @@
+#include "exceptions.h"
+#include "operation.h"
+#include "element.h"
+#include <sstream>
+#include <memory>
+
+using namespace std;
+
+Operation Operation::parseOperation(const string& element) {
+  istringstream readable = istringstream(element);
+  string lhs_s,op_s,rhs_s;
+
+  if(!(readable >> lhs_s >> op_s >> rhs_s)) {
+    throw InsufficientArgumentCount("Too few arguments in string " + element);
+  }
+
+  if (!(Element::canConvertToElement(lhs_s) )) {
+    throw InvalidElement("lhs element " + lhs_s + " is invalid!");
+  }
+  if (!(Operator::is_operator(op_s))) {
+    throw InvalidOperator("operator " + op_s + " is invalid!");
+  }
+  if (!(Element::canConvertToElement(rhs_s) )) {
+    throw InvalidElement("rhs element " + rhs_s + " is invalid!");
+  }
+  auto lhs = make_unique<Element>(lhs_s);
+  auto op  = make_unique<Operator>(op_s);
+  auto rhs = make_unique<Element>(rhs_s);
+
+  Element computed = op->operate(*lhs, *rhs);
+  return Operation(computed, lhs.release(), op.release(), rhs.release());
+}
+
+Operation::Operation(const Operation& other)
+  : 
+    Element(other),
+    lhs(other.lhs->Clone()), 
+    op (other.op ->Clone()), 
+    rhs(other.rhs->Clone())
+  { }
+
+void swap(Operation& first, Operation& second) {
+  swap(static_cast<Element&>(first), static_cast<Element&>(second));
+  swap(first.lhs, second.lhs);
+  swap(first.op, second.op);
+  swap(first.rhs, second.rhs);
+}
+
+Operation& Operation::operator=(Operation other) {
+  swap(*this,other);
+  return *this;
+}
+
+Operation::~Operation() {
+  delete lhs;
+  delete op;
+  delete rhs;
+}
+ostream& operator<<(ostream& os, const Operation& op) {
+    return os << "(" << *op.lhs << " " << *op.op << " " << *op.rhs << ")";
+}
+
+Element Operation::compute() const {
+  return *this;
+}
+
+// Bro...
+
+double Operation::Value() const {
+  return this->compute().Value();
+}
+int Operation::IntValue() const {
+  return this->compute().IntValue();
+}
+double Operation::DoubleValue() const {
+  return this->compute().DoubleValue();
+}
+bool Operation::IsInt() const {
+  return this->compute().IsInt();
+}
+bool Operation::IsDouble() const {
+  return this->compute().IsDouble();
+}
+Operation* Operation::Clone() const {
+  return new Operation(*this);
+}
