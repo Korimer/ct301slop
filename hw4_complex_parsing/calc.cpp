@@ -34,7 +34,6 @@ int main(int argc, char* argv[] ) {
         exit(line_count + 2);
       }
     }
-    }
 
     for (size_t i=0; i<all_oprs.size(); i++) {
       std::cout << all_oprs[i].Value() << std::endl;

@@ -26,3 +26,8 @@ class ModuloByDoubleError : public std::domain_error {
   public:
     using std::domain_error::domain_error;
 };
+
+class InvalidEquationStructure : public std::invalid_argument {
+  public:
+    using std::invalid_argument::invalid_argument;
+};
