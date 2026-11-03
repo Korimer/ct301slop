@@ -39,7 +39,7 @@ void Parser::reduce() {
 
   Operation operation = Operation(*lhs, op, *rhs);
 
-  std::cout << operation << std::endl;
+  //std::cout << operation << std::endl;
 
   elements.push(make_unique<Operation>(operation));
 }

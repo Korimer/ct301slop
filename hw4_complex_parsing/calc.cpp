@@ -15,7 +15,6 @@ using namespace std;
 
 int main(int argc, char* argv[] ) {
   Parser parser;
-  vector<unique_ptr<Element>> all_oprs;
 
   if (argc == 1) {
     std::cout << "No arguments presented" << std::endl;
@@ -39,16 +38,43 @@ int main(int argc, char* argv[] ) {
     while (getline(file, line)) {
       line_count++;
       if (line.empty()) continue;
+      unique_ptr<Element> opr;
       try {
-        all_oprs.emplace_back(parser.Parse(line));
+        opr.reset(parser.Parse(line));
       } catch (...) {
         std::cerr << "Exited prematurely due to error on line " << line_count << std::endl;
         exit(line_count + 2);
       }
+      std::cout << *opr << std::endl;
     }
-
-    for (size_t i=0; i<all_oprs.size(); i++) {
-      std::cout << all_oprs[i]->Value() << std::endl;
+  }
+    else if (flag == "-c") {
+    try {
+      if (argc != 5) {
+        std::cerr << "Calculator mode takes exactly: lhs op rhs.";
+        exit(2);
+      }
+      if (Token(argv[2]).type != TokenType::Number)   { throw InvalidElement("Invalid lhs"); }
+      if (Token(argv[3]).type != TokenType::Operator) { throw InvalidOperator("Invalid operator"); }
+      if (Token(argv[4]).type != TokenType::Number)   { throw InvalidElement("Invalid rhs"); }
+      string expr = string(argv[2]) + " " + argv[3] + " " + argv[4];
+      unique_ptr<Element> opr(parser.Parse(expr));
+      std::cout << *opr << std::endl;
+    } catch (InvalidElement&) {
+      std::cerr << "Invalid Element!";
+      exit(3);
+    } catch (InvalidOperator&) {
+      std::cerr << "Invalid Operator!";
+      exit(4);
+    } catch (InvalidEquationStructure&) {
+      std::cerr << "Invalid Equation!";
+      exit(6);
+    } catch (DivideByZeroError&) {
+      std::cerr << "Math Error occurred.";
+      exit(5);
+    } catch (ModuloByDoubleError&) {
+      std::cerr << "Math Error occurred.";
+      exit(5);
     }
   }
   else {
