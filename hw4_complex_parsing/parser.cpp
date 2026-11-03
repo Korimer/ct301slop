@@ -1,89 +1,123 @@
-
 #include "parser.h"
-#include "operation.h"
 #include "element.h"
-#include "token.h"
 #include "exceptions.h"
+#include "operation.h"
+#include "operator.h"
+#include "token.h"
 
 #include <sstream>
-#include <stack>
-#include <string>
-#include <vector>
 
 using namespace std;
 
+int Parser::precedence(char c) {
+  switch (c) {
+    case '*': case '/': case '%': return 2;
+    case '+': case '-':           return 1;
+    default:                      return 0;
+  }
+}
+
 void Parser::reset() {
-  this->elements = std::stack<std::unique_ptr<Element>>();
-  this->operators = std::stack<std::unique_ptr<Operator>>();
+  elements = stack<unique_ptr<Element>>();
+  operators = stack<char>();
+  expectOperand = true;
 }
 
 void Parser::reduce() {
-  unique_ptr<Operator> op = operators.top().get();
+  if (operators.empty() || operators.top() == '(' || elements.size() < 2) {
+    throw InvalidEquationStructure("Missing operand or operator");
+  }
+
+  Operator op(operators.top());
   operators.pop();
-  unique_ptr<Element> lhs = elements.top().get();
+
+  unique_ptr<Element> rhs = std::move(elements.top());
   elements.pop();
-  unique_ptr<Element> rhs = elements.top().get();
+  unique_ptr<Element> lhs = std::move(elements.top());
   elements.pop();
 
-  Operation operation = Operation(lhs,op,rhs); 
-  elements.push()
+  elements.push(make_unique<Operation>(*lhs, op, *rhs));
 }
 
 Element* Parser::Parse(const string& equationStr) {
-  this->reset();
+  reset();
 
-  std::vector<Token> tokens = std::vector<Token>();
-
-  std::istringstream in(equationStr);
-  std::string token;
-
-  while (in >> token) {
-    tokens.push_back(Token(token));
+  istringstream in(equationStr);
+  string word;
+  while (in >> word) {
+    next(Token(word));
   }
 
-  try {
-    for (const Token& token : tokens) {
-      next(token);
+  if (expectOperand) {
+    throw InvalidEquationStructure("Expression ended where an operand was expected");
+  }
+
+  while (!operators.empty()) {
+    if (operators.top() == '(') {
+      throw InvalidEquationStructure("Unbalanced parentheses: missing ')'");
     }
-  } catch (InvalidEquationStructure) {
-    return nullptr;
+    reduce();
   }
 
-  if (!operators.empty()) {
-    return nullptr;
+  if (elements.size() != 1) {
+    throw InvalidEquationStructure("Malformed expression");
   }
-  if (elements.empty()) {
-    return nullptr;
-  }
-  auto fullEq = elements.top();
+
+  unique_ptr<Element> result = std::move(elements.top());
   elements.pop();
-  if (!elements.empty()) {
-    return nullptr;
-  }
-
-  return fullEq;
+  return result.release();
 }
-
 
 void Parser::next(const Token& token) {
   switch (token.type) {
-    case TokenType::Operator: op();
-    case TokenType::Number:   num();
-    case TokenType::LParen:   opnParen();
-    case TokenType::RParen:   closeParen();
-    case TokenType::Invalid:  throw InvalidEquationStructure("Error: Invalid token.");
+    case TokenType::Operator: op(token.text);  break;
+    case TokenType::Number:   num(token.text); break;
+    case TokenType::LParen:   opnParen();      break;
+    case TokenType::RParen:   closeParen();    break;
+    case TokenType::Invalid:
+      throw InvalidElement("Invalid token: " + token.text);
   }
 }
 
-void Parser::op() {
+void Parser::op(const string& text) {
+  if (expectOperand) {
+    throw InvalidEquationStructure("Unexpected operator " + text);
+  }
+  char incoming = text[0];
 
+  while (!operators.empty() && operators.top() != '(' &&
+         precedence(operators.top()) >= precedence(incoming)) {
+    reduce();
+  }
+  operators.push(incoming);
+  expectOperand = true;
 }
-void Parser::num() {
 
+void Parser::num(const string& text) {
+  if (!expectOperand) {
+    throw InvalidEquationStructure("Unexpected number " + text);
+  }
+  elements.push(make_unique<Element>(text));
+  expectOperand = false;
 }
+
 void Parser::opnParen() {
-
+  if (!expectOperand) {
+    throw InvalidEquationStructure("Unexpected '('");
+  }
+  operators.push('(');
 }
-void Parser::closeParen() {
 
+void Parser::closeParen() {
+  if (expectOperand) {
+    throw InvalidEquationStructure("Unexpected ')'");
+  }
+  while (!operators.empty() && operators.top() != '(') {
+    reduce();
+  }
+  if (operators.empty()) {
+    throw InvalidEquationStructure("Unbalanced parentheses: extra ')'");
+  }
+  operators.pop();
+  expectOperand = false;
 }
