@@ -12,12 +12,13 @@
 
 class Parser {
   private:
-    std::stack<Element> elements = std::stack<Element>();
-    std::stack<Operator> operators = std::stack<Operator>();
+    std::stack<std::unique_ptr<Element>> elements = std::stack<std::unique_ptr<Element>>();
+    std::stack<std::unique_ptr<Operator>> operators = std::stack<std::unique_ptr<Operator>>();
 
     void reset();
 
     void next(const Token& token);
+    void reduce();
 
     void opnParen();
     void closeParen();

@@ -35,7 +35,7 @@ NIX_BINTOOLS='/nix/store/0fdc105g1896ganr8916rsjxhvr9qv5b-binutils-wrapper-2.46'
 export NIX_BINTOOLS
 NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu='1'
 export NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
-NIX_BUILD_CORES='20'
+NIX_BUILD_CORES='16'
 export NIX_BUILD_CORES
 NIX_CC='/nix/store/z4c6k0mrlkwl3s4w9ysxc8vq1wylm3ms-gcc-wrapper-15.3.0'
 export NIX_CC
@@ -47,7 +47,7 @@ NIX_ENFORCE_NO_NATIVE='1'
 export NIX_ENFORCE_NO_NATIVE
 NIX_HARDENING_ENABLE='bindnow format fortify fortify3 libcxxhardeningfast pic relro stackclashprotection stackprotector strictflexarrays1 strictoverflow zerocallusedregs'
 export NIX_HARDENING_ENABLE
-NIX_LDFLAGS='-rpath /home/korimer/Sync/School/ct301/outputs/out/lib  -L/nix/store/2xrxnqpkwlr4smxwhg5x34s2nbs2rpi6-gdb-17.2/lib -L/nix/store/gf6qdh329rc8lbby710r9rzhwqkkgv3h-clang-tools-21.1.8/lib -L/nix/store/2xrxnqpkwlr4smxwhg5x34s2nbs2rpi6-gdb-17.2/lib -L/nix/store/gf6qdh329rc8lbby710r9rzhwqkkgv3h-clang-tools-21.1.8/lib'
+NIX_LDFLAGS='-rpath /home/korimer/Documents/cs/school/ct301slop/outputs/out/lib  -L/nix/store/2xrxnqpkwlr4smxwhg5x34s2nbs2rpi6-gdb-17.2/lib -L/nix/store/gf6qdh329rc8lbby710r9rzhwqkkgv3h-clang-tools-21.1.8/lib -L/nix/store/2xrxnqpkwlr4smxwhg5x34s2nbs2rpi6-gdb-17.2/lib -L/nix/store/gf6qdh329rc8lbby710r9rzhwqkkgv3h-clang-tools-21.1.8/lib'
 export NIX_LDFLAGS
 NIX_NO_SELF_RPATH='1'
 NIX_PKG_CONFIG_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu='1'
@@ -152,7 +152,7 @@ name='nix-shell-env'
 export name
 nativeBuildInputs='/nix/store/z4c6k0mrlkwl3s4w9ysxc8vq1wylm3ms-gcc-wrapper-15.3.0 /nix/store/2xrxnqpkwlr4smxwhg5x34s2nbs2rpi6-gdb-17.2 /nix/store/c3bm9h7k398cmg00d4rss6hcxkl2zbl2-cmake-4.4.2 /nix/store/r8a159fqvj0mpczq0dq8d3dwdd2rsz8c-ninja-1.13.2 /nix/store/29d1c5xk6w3rwl7yvdfwl90whslv5h54-pkg-config-wrapper-0.29.2 /nix/store/gf6qdh329rc8lbby710r9rzhwqkkgv3h-clang-tools-21.1.8'
 export nativeBuildInputs
-out='/home/korimer/Sync/School/ct301/outputs/out'
+out='/home/korimer/Documents/cs/school/ct301slop/outputs/out'
 export out
 outputBin='out'
 outputDev='out'
@@ -184,7 +184,7 @@ preConfigurePhases=' updateAutotoolsGnuConfigScriptsPhase'
 declare -a preFixupHooks=('_moveToShare' '_multioutDocs' '_multioutDevs' )
 preferLocalBuild='1'
 export preferLocalBuild
-prefix='/home/korimer/Sync/School/ct301/outputs/out'
+prefix='/home/korimer/Documents/cs/school/ct301slop/outputs/out'
 declare -a propagatedBuildDepFiles=('propagated-build-build-deps' 'propagated-native-build-inputs' 'propagated-build-target-deps' )
 propagatedBuildInputs=''
 export propagatedBuildInputs
