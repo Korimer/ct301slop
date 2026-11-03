@@ -12,6 +12,7 @@ class Parser {
     std::stack<std::unique_ptr<Element>> elements;
     std::stack<char> operators;
     bool expectOperand = true;
+    int errorIndex = 0;
 
     static int precedence(char c);
 
@@ -27,4 +28,5 @@ class Parser {
     Parser() = default;
 
     Element* Parse(const std::string& equationStr);
+    int ErrorIndex() { return errorIndex; };
 };

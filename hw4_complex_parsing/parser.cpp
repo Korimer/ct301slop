@@ -21,6 +21,7 @@ void Parser::reset() {
   elements = stack<unique_ptr<Element>>();
   operators = stack<char>();
   expectOperand = true;
+  errorIndex = 0;
 }
 
 void Parser::reduce() {
@@ -42,9 +43,11 @@ void Parser::reduce() {
 Element* Parser::Parse(const string& equationStr) {
   reset();
 
+  int i = 0;
   istringstream in(equationStr);
   string word;
   while (in >> word) {
+    errorIndex = ++i;
     next(Token(word));
   }
 
