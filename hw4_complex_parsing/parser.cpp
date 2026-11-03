@@ -37,7 +37,11 @@ void Parser::reduce() {
   unique_ptr<Element> lhs = std::move(elements.top());
   elements.pop();
 
-  elements.push(make_unique<Operation>(*lhs, op, *rhs));
+  Operation operation = Operation(*lhs, op, *rhs);
+
+  std::cout << operation << std::endl;
+
+  elements.push(make_unique<Operation>(operation));
 }
 
 Element* Parser::Parse(const string& equationStr) {

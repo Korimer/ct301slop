@@ -52,21 +52,20 @@ int main(int argc, char* argv[] ) {
     }
   }
   else {
-    string expr;
-    vector<int> tokenToArg;
     for (int i = 1; i < argc; i++) {
-      expr += string(argv[i]) + " ";
-      istringstream words = istringstream(argv[i]);
-      string w;
-      while (words >> w) { tokenToArg.push_back(i); }
-    }
-    try {
-      unique_ptr<Element> opr(parser.Parse(expr));
-      std::cout << opr->Value() << std::endl;
-    } catch (...) {
-      int t = parser.ErrorIndex();
-      int arg = (t >= 1 && t <= (int)tokenToArg.size()) ? tokenToArg[t - 1] : argc - 1;
-      exit(2 + arg);
+      unique_ptr<Element> opr;
+      try {
+        opr.reset(parser.Parse(argv[i]));
+      } catch (...) {
+        exit(2 + i);
+      }
+
+      string eq = argv[i];
+      size_t b = eq.find_first_not_of(" \t");
+      size_t e = eq.find_last_not_of(" \t");
+      eq = eq.substr(b, e - b + 1);
+
+      std::cout << eq << " = " << *opr << std::endl;
     }
   }
 
