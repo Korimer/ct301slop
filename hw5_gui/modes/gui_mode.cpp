@@ -1,7 +1,6 @@
 #include "modes.h"
 #include "../exceptions.h"
 #include "../operation.h"
-#include <cstddef>
 
 #define SDL_MAIN_HANDLED   // we have our own main(); avoids SDL's Windows main() shim
 #include <SDL.h>
@@ -10,6 +9,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -17,12 +17,7 @@
 #include <vector>
 using namespace std;
 
-struct HistoryEntry {
-  string expr;
-  string result;
-  bool   is_error;
-};
-
+// Not used yet; will be needed once there's an "=" button.
 bool Evaluate(Parser& parser, const string& expr, string& out) {
   try {
     unique_ptr<Element> opr(parser.Parse(expr));
@@ -39,8 +34,9 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
 }
 
 // Draws the calculator UI for one frame.
-void DrawCalculator(bool& shouldExit) { //Parser& parser, string& input, vector<HistoryEntry>& history) {
+void DrawCalculator(string& input, bool& shouldExit) {
   ImGuiIO& io = ImGui::GetIO();
+  ImGuiStyle& style = ImGui::GetStyle();
   ImGui::SetNextWindowPos(ImVec2(0, 0));
   ImGui::SetNextWindowSize(io.DisplaySize);
 
@@ -54,7 +50,28 @@ void DrawCalculator(bool& shouldExit) { //Parser& parser, string& input, vector<
       ImGuiWindowFlags_NoCollapse |
       ImGuiWindowFlags_NoSavedSettings);
 
-  ImGui::Text("Hi!!");
+  ImGui::Text("%s", input.empty() ? "0" : input.c_str());
+  ImGui::Separator();
+
+  static const char* keys[4][4] = {
+    {"7", "8", "9", "/"},
+    {"4", "5", "6", "*"},
+    {"1", "2", "3", "-"},
+    {"0", ".", "C", "+"},
+  };
+  const float btnW = (ImGui::GetContentRegionAvail().x - 3 * style.ItemSpacing.x) / 4;
+  const float btnH = ImGui::GetFrameHeight() * 1.8f;
+
+  for (int r = 0; r < 4; r++) {
+    for (int c = 0; c < 4; c++) {
+      if (c > 0) ImGui::SameLine();
+      if (ImGui::Button(keys[r][c], ImVec2(btnW, btnH))) {
+        if (string(keys[r][c]) == "C") input.clear();
+        else                           input += keys[r][c];
+      }
+    }
+  }
+
   ImGui::End();
 
   if (!open)
@@ -64,24 +81,29 @@ void DrawCalculator(bool& shouldExit) { //Parser& parser, string& input, vector<
 // Referenced extremely closely to the imgui example files
 // https://github.com/ocornut/imgui/blob/master/examples/example_sdl2_sdlrenderer2/main.cpp
 bool imguiSpinUp(SDL_Window*& window, SDL_Renderer*& renderer) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
+    printf("Error: SDL_Init(): %s\n", SDL_GetError());
+    return false;
+  }
+
   // Create window with SDL_Renderer graphics context
   float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
   SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
+  window = SDL_CreateWindow("Calculator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(360 * main_scale), (int)(480 * main_scale), window_flags);
   if (window == nullptr)
   {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-    return 1;
+    SDL_Quit();
+    return false;
   }
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
   if (renderer == nullptr)
   {
     SDL_Log("Error creating SDL_Renderer!");
-    return 1;
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return false;
   }
-  //SDL_RendererInfo info;
-  //SDL_GetRendererInfo(renderer, &info);
-  //SDL_Log("Current SDL_Renderer: %s", info.name);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -93,23 +115,30 @@ bool imguiSpinUp(SDL_Window*& window, SDL_Renderer*& renderer) {
   // Setup Dear ImGui style
   ImGuiStyle& style = ImGui::GetStyle();
   ImGui::StyleColorsDark();
-  //ImGui::StyleColorsLight();
-  //style.FontSizeBase = 16.0f;           // Default to 13.0f when unspecified, which allows crisp legacy font for non-4K screens.
   style.FrameRounding = 3.0f;
   style.GrabRounding = 3.0f;
 
   // Setup scaling
-  style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-  style.FontScaleDpi = main_scale;        // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+  style.ScaleAllSizes(main_scale);
+  style.FontScaleDpi = main_scale;
 
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
   ImGui_ImplSDLRenderer2_Init(renderer);
 
-  return 0;
+  return true;
 }
 
-void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer) {
+void imguiShutdown(SDL_Window* window, SDL_Renderer* renderer) {
+  ImGui_ImplSDLRenderer2_Shutdown();
+  ImGui_ImplSDL2_Shutdown();
+  ImGui::DestroyContext();
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
+
+void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer, string& input) {
   ImGuiIO& io = ImGui::GetIO();
 
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -139,7 +168,7 @@ void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer) {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    DrawCalculator(done);
+    DrawCalculator(input, done);
 
     ImGui::Render();
     SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
@@ -147,27 +176,20 @@ void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer) {
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
-
   }
 }
 
 int RunGuiMode(Parser& parser) {
-  if (false) {
-    parser.Parse("lol");
-  }
-  SDL_Window* window;
-  SDL_Renderer* renderer;
+  (void)parser;   // will be used when the "=" button is added
 
-  imguiSpinUp(window, renderer);
+  SDL_Window* window = nullptr;
+  SDL_Renderer* renderer = nullptr;
+  if (!imguiSpinUp(window, renderer))
+    return 1;
 
-  Parser baseParser = Parser();
-  vector<HistoryEntry> history = vector<HistoryEntry>();
-  string input = "lol";
+  string input;
+  imguiRunLoop(window, renderer, input);
 
-  imguiRunLoop(window, renderer);
-
-  //DrawCalculator(baseParser, input, history);
-
-
+  imguiShutdown(window, renderer);
   return 0;
 }
