@@ -17,7 +17,6 @@
 #include <vector>
 using namespace std;
 
-// Not used yet; will be needed once there's an "=" button.
 bool Evaluate(Parser& parser, const string& expr, string& out) {
   try {
     unique_ptr<Element> opr(parser.Parse(expr));
@@ -33,10 +32,9 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
   return false;
 }
 
-// Draws the calculator UI for one frame.
 void DrawCalculator(Parser& parser, string& input, bool& shouldExit) {
-  static string error;   // last evaluation error, shown under the display
-
+  static string error;
+  static vector<string> history;
   ImGuiIO& io = ImGui::GetIO();
   ImGuiStyle& style = ImGui::GetStyle();
   ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -52,18 +50,16 @@ void DrawCalculator(Parser& parser, string& input, bool& shouldExit) {
       ImGuiWindowFlags_NoCollapse |
       ImGuiWindowFlags_NoSavedSettings);
 
-  // Display
   ImGui::Text("%s", input.empty() ? "0" : input.c_str());
   if (!error.empty())
     ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", error.c_str());
   ImGui::Separator();
 
-  // Buttons
   static const char* keys[5][4] = {
-    {"C", "(", ")", "/"},
-    {"7", "8", "9", "*"},
-    {"4", "5", "6", "-"},
-    {"1", "2", "3", "+"},
+    {"C", " ( ", " ) ", " / "},
+    {"7", "8", "9", " * "},
+    {"4", "5", "6", " - "},
+    {"1", "2", "3", " + "},
     {"0", ".", "Del", "="},
   };
   const float btnW = (ImGui::GetContentRegionAvail().x - 3 * style.ItemSpacing.x) / 4;
@@ -85,14 +81,30 @@ void DrawCalculator(Parser& parser, string& input, bool& shouldExit) {
         } else if (key == "=") {
           if (!input.empty()) {
             string out;
-            if (Evaluate(parser, input, out))
+            if (Evaluate(parser, input, out)) {
               input = out;
-            else
+              history.push_back(out);
+            } else {
               error = out;
+            }
           }
         } else {
           input += key;
         }
+      }
+    }
+  }
+
+  if (!history.empty()) {
+    ImGui::Separator();
+
+    for (int i = (int)history.size() - 1; i >= 0; i--) {
+      // "##index" keeps IDs unique when two results have the same text.
+      // Thx claude
+      string label = history[i] + "##hist" + to_string(i);
+      if (ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, btnH))) {
+        error.clear();
+        input += history[i];
       }
     }
   }

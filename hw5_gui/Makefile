@@ -77,6 +77,6 @@ clean:
 	rm -f $(TARGET) $(TARGET).exe $(OBJ) $(IMGUI_OBJ) $(HWNUM)_$(TARNAME).tar
 
 package:
-	tar -c Makefile $(SRC) $(MAIN) $(HEADER) $(IMGUI) -f $(HWNUM)_$(TARNAME).tar
+	tar -c Makefile README.md $(SRC) $(MAIN) $(HEADER) $(IMGUI) -f $(HWNUM)_$(TARNAME).tar
 
 .PHONY: clean package
