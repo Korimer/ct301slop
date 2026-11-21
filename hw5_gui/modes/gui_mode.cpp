@@ -1,6 +1,7 @@
 #include "modes.h"
 #include "../exceptions.h"
 #include "../operation.h"
+#include <cstddef>
 
 #define SDL_MAIN_HANDLED   // we have our own main(); avoids SDL's Windows main() shim
 #include <SDL.h>
@@ -16,16 +17,12 @@
 #include <vector>
 using namespace std;
 
-namespace {
-
 struct HistoryEntry {
   string expr;
   string result;
   bool   is_error;
 };
 
-// Evaluates one expression. Returns true on success; `out` holds the result
-// or an error message.
 bool Evaluate(Parser& parser, const string& expr, string& out) {
   try {
     unique_ptr<Element> opr(parser.Parse(expr));
@@ -33,16 +30,8 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
     ss << *opr;
     out = ss.str();
     return true;
-  } catch (InvalidElement&) {
-    out = "Invalid Element!";
-  } catch (InvalidOperator&) {
-    out = "Invalid Operator!";
-  } catch (InvalidEquationStructure&) {
-    out = "Invalid Equation!";
-  } catch (DivideByZeroError&) {
-    out = "Math Error occurred.";
-  } catch (ModuloByDoubleError&) {
-    out = "Math Error occurred.";
+  } catch (const std::exception& e) {
+    out = e.what();
   } catch (...) {
     out = "Unknown error.";
   }
@@ -55,141 +44,100 @@ void DrawCalculator(Parser& parser, string& input, vector<HistoryEntry>& history
   ImGui::SetNextWindowPos(ImVec2(0, 0));
   ImGui::SetNextWindowSize(io.DisplaySize);
   ImGui::Begin("Calculator", nullptr,
-               ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-               ImGuiWindowFlags_NoSavedSettings);
+      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+      ImGuiWindowFlags_NoSavedSettings);
 
-  auto submit = [&]() {
-    if (input.empty()) return;
-    string out;
-    bool ok = Evaluate(parser, input, out);
-    history.push_back({input, out, !ok});
-    if (ok) input = out;   // chain results into the next calculation
-    else    input.clear();
-  };
-
-  // --- input line ---
-  ImGui::SetNextItemWidth(-FLT_MIN);
-  if (ImGui::InputText("##input", &input[0], input.capacity() + 1,
-                       ImGuiInputTextFlags_EnterReturnsTrue |
-                       ImGuiInputTextFlags_CallbackResize,
-                       [](ImGuiInputTextCallbackData* d) -> int {
-                         if (d->EventFlag == ImGuiInputTextFlags_CallbackResize) {
-                           auto* s = static_cast<string*>(d->UserData);
-                           s->resize(static_cast<size_t>(d->BufTextLen));
-                           d->Buf = &(*s)[0];
-                         }
-                         return 0;
-                       }, &input)) {
-    submit();
-    ImGui::SetKeyboardFocusHere(-1);   // keep focus on the input after Enter
-  }
-
-  // --- keypad ---
-  static const char* keys[] = {
-    "7", "8", "9", "/",
-    "4", "5", "6", "*",
-    "1", "2", "3", "-",
-    "0", ".", "%", "+",
-  };
-  const float w = (ImGui::GetContentRegionAvail().x -
-                   3 * ImGui::GetStyle().ItemSpacing.x) / 4.0f;
-  for (int i = 0; i < 16; i++) {
-    if (ImGui::Button(keys[i], ImVec2(w, 40))) {
-      string k = keys[i];
-      bool is_op = (k == "/" || k == "*" || k == "-" || k == "+" || k == "%");
-      input += is_op ? " " + k + " " : k;   // parser expects spaces around operators
-    }
-    if (i % 4 != 3) ImGui::SameLine();
-  }
-  const float w3 = (ImGui::GetContentRegionAvail().x -
-                    2 * ImGui::GetStyle().ItemSpacing.x) / 3.0f;
-  if (ImGui::Button("C", ImVec2(w3, 40))) input.clear();
-  ImGui::SameLine();
-  if (ImGui::Button("DEL", ImVec2(w3, 40)) && !input.empty()) input.pop_back();
-  ImGui::SameLine();
-  if (ImGui::Button("=", ImVec2(w3, 40))) submit();
-
-  // --- history ---
-  ImGui::SeparatorText("History");
-  ImGui::BeginChild("history");
-  for (const auto& h : history) {
-    ImGui::TextDisabled("%s", h.expr.c_str());
-    if (h.is_error) ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "  %s", h.result.c_str());
-    else            ImGui::Text("  = %s", h.result.c_str());
-  }
-  if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
-  ImGui::EndChild();
-
-  ImGui::End();
 }
 
-}  // namespace
-
-int RunGuiMode(Parser& parser) {
-  SDL_SetMainReady();
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    cerr << "SDL_Init failed: " << SDL_GetError() << endl;
+// Referenced extremely closely to the imgui example files
+// https://github.com/ocornut/imgui/blob/master/examples/example_sdl2_sdlrenderer2/main.cpp
+bool imguiSpinUp(SDL_Window*& window) {
+  // Create window with SDL_Renderer graphics context
+  float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
+  SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+  window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
+  if (window == nullptr)
+  {
+    printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return 1;
   }
-
-  SDL_Window* window = SDL_CreateWindow(
-      "Calculator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 380, 640,
-      SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  if (!window) {
-    cerr << "SDL_CreateWindow failed: " << SDL_GetError() << endl;
-    SDL_Quit();
+  SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+  if (renderer == nullptr)
+  {
+    SDL_Log("Error creating SDL_Renderer!");
     return 1;
   }
+  //SDL_RendererInfo info;
+  //SDL_GetRendererInfo(renderer, &info);
+  //SDL_Log("Current SDL_Renderer: %s", info.name);
 
-  SDL_Renderer* renderer = SDL_CreateRenderer(
-      window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-  if (!renderer) renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-  if (!renderer) {
-    cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << endl;
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 1;
-  }
-
+  // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui::GetIO().IniFilename = nullptr;   // don't litter imgui.ini
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+  // Setup Dear ImGui style
+  ImGuiStyle& style = ImGui::GetStyle();
   ImGui::StyleColorsDark();
+  //ImGui::StyleColorsLight();
+  //style.FontSizeBase = 16.0f;           // Default to 13.0f when unspecified, which allows crisp legacy font for non-4K screens.
+  style.FrameRounding = 3.0f;
+  style.GrabRounding = 3.0f;
+
+  // Setup scaling
+  style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+  style.FontScaleDpi = main_scale;        // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+
+  // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
   ImGui_ImplSDLRenderer2_Init(renderer);
 
-  string input;
-  vector<HistoryEntry> history;
-  bool running = true;
+  return 0;
+}
 
-  while (running) {
+void imguiRunLoop(SDL_Window*& window) {
+  bool show_demo_window = true;
+  bool show_another_window = false;
+  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+  // Main loop
+  bool done = false;
+  while (!done)
+  {
+    // Poll and handle events (inputs, window resize, etc.)
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
+    while (SDL_PollEvent(&event))
+    {
       ImGui_ImplSDL2_ProcessEvent(&event);
-      if (event.type == SDL_QUIT) running = false;
-      if (event.type == SDL_WINDOWEVENT &&
-          event.window.event == SDL_WINDOWEVENT_CLOSE &&
-          event.window.windowID == SDL_GetWindowID(window)) running = false;
+      if (event.type == SDL_QUIT)
+        done = true;
+      if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+        done = true;
+    }
+    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
+    {
+      SDL_Delay(10);
+      continue;
     }
 
-    ImGui_ImplSDLRenderer2_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
-
-    DrawCalculator(parser, input, history);
-
-    ImGui::Render();
-    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-    SDL_RenderClear(renderer);
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
-    SDL_RenderPresent(renderer);
   }
+}
 
-  ImGui_ImplSDLRenderer2_Shutdown();
-  ImGui_ImplSDL2_Shutdown();
-  ImGui::DestroyContext();
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+int RunGuiMode(Parser& parser) {
+  SDL_Window* window;
+
+  imguiSpinUp(window);
+
+  Parser baseParser = Parser();
+  vector<HistoryEntry> history = vector<HistoryEntry>();
+  string input = "lol";
+
+  imguiRunLoop(window);
+
+  DrawCalculator(baseParser, input, history);
+
+
   return 0;
 }

@@ -1,10 +1,5 @@
 # Makefile generated via claude, double-checked by me
 
-# Depends on sdl2 -
-# On linux, libsdl2-dev
-# On windows, mingw-w64-x86_64-SDL2
-
-
 GPP     = g++
 TARGET  = calculator
 MAIN    = calc.cpp
