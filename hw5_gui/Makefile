@@ -38,7 +38,6 @@ else
 endif
 
 ifeq ($(SDL_MISSING),1)
-  $(warning )
   $(warning ################################################################)
   $(warning #                                                              #)
   $(warning #   WARNING: SDL.h NOT FOUND -- libsdl2 IS NOT INSTALLED!      #)
@@ -47,14 +46,17 @@ ifeq ($(SDL_MISSING),1)
   $(warning #     Debian/Ubuntu:  sudo apt install libsdl2-dev             #)
   $(warning #     Fedora:         sudo dnf install SDL2-devel              #)
   $(warning #     Arch:           sudo pacman -S sdl2                      #)
-  $(warning #     macOS (brew):   brew install sdl2                        #)
+  $(warning #     macOS - brew:   brew install sdl2                        #)
   $(warning #     Windows MinGW:  pacman -S mingw-w64-x86_64-SDL2          #)
-  $(warning #                     (run from the MSYS2 MinGW64 shell)       #)
+  $(warning #                       ...run from the MSYS2 MinGW64 shell    #)
   $(warning #                                                              #)
   $(warning #   The build will almost certainly fail without it.           #)
   $(warning #                                                              #)
+  $(warning #   ...Please note this is a prerequisite for imgui,           #)
+  $(warning #   as opposed to something missing within the code            #)
+  $(warning #   that I have submitted.                                     #)
+  $(warning #                                                              #)
   $(warning ################################################################)
-  $(warning )
 endif
 
 STRICT = -Wall -Wextra -Werror -Wfatal-errors -std=c++20
