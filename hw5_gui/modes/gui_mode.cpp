@@ -39,15 +39,27 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
 }
 
 // Draws the calculator UI for one frame.
-//void DrawCalculator(Parser& parser, string& input, vector<HistoryEntry>& history) {
-//  ImGuiIO& io = ImGui::GetIO();
-//  ImGui::SetNextWindowPos(ImVec2(0, 0));
-//  ImGui::SetNextWindowSize(io.DisplaySize);
-//  ImGui::Begin("Calculator", nullptr,
-//      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-//      ImGuiWindowFlags_NoSavedSettings);
-//
-//}
+void DrawCalculator(bool& shouldExit) { //Parser& parser, string& input, vector<HistoryEntry>& history) {
+  ImGuiIO& io = ImGui::GetIO();
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::SetNextWindowSize(io.DisplaySize);
+
+  bool open = true;
+  // If I set NoDecoration here, it removes the built-in title
+  // But it seems like some operating systems don't include the built-in title bar by default
+  // So I'll keep it here for compatibility (and too bad if it has a double title bar)
+  ImGui::Begin("Calculator", &open,
+      ImGuiWindowFlags_NoMove |
+      ImGuiWindowFlags_NoResize |
+      ImGuiWindowFlags_NoCollapse |
+      ImGuiWindowFlags_NoSavedSettings);
+
+  ImGui::Text("Hi!!");
+  ImGui::End();
+
+  if (!open)
+    shouldExit = true;
+}
 
 // Referenced extremely closely to the imgui example files
 // https://github.com/ocornut/imgui/blob/master/examples/example_sdl2_sdlrenderer2/main.cpp
@@ -126,11 +138,8 @@ void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer) {
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    ImGui::Begin("Another Window", &done);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-    ImGui::Text("Hello from another window!");
-    if (ImGui::Button("Close Me"))
-      done = false;
-    ImGui::End();
+
+    DrawCalculator(done);
 
     ImGui::Render();
     SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
