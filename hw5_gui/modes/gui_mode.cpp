@@ -39,19 +39,19 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
 }
 
 // Draws the calculator UI for one frame.
-void DrawCalculator(Parser& parser, string& input, vector<HistoryEntry>& history) {
-  ImGuiIO& io = ImGui::GetIO();
-  ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::SetNextWindowSize(io.DisplaySize);
-  ImGui::Begin("Calculator", nullptr,
-      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-      ImGuiWindowFlags_NoSavedSettings);
-
-}
+//void DrawCalculator(Parser& parser, string& input, vector<HistoryEntry>& history) {
+//  ImGuiIO& io = ImGui::GetIO();
+//  ImGui::SetNextWindowPos(ImVec2(0, 0));
+//  ImGui::SetNextWindowSize(io.DisplaySize);
+//  ImGui::Begin("Calculator", nullptr,
+//      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+//      ImGuiWindowFlags_NoSavedSettings);
+//
+//}
 
 // Referenced extremely closely to the imgui example files
 // https://github.com/ocornut/imgui/blob/master/examples/example_sdl2_sdlrenderer2/main.cpp
-bool imguiSpinUp(SDL_Window*& window) {
+bool imguiSpinUp(SDL_Window*& window, SDL_Renderer*& renderer) {
   // Create window with SDL_Renderer graphics context
   float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
   SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -61,7 +61,7 @@ bool imguiSpinUp(SDL_Window*& window) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return 1;
   }
-  SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
   if (renderer == nullptr)
   {
     SDL_Log("Error creating SDL_Renderer!");
@@ -97,9 +97,9 @@ bool imguiSpinUp(SDL_Window*& window) {
   return 0;
 }
 
-void imguiRunLoop(SDL_Window*& window) {
-  bool show_demo_window = true;
-  bool show_another_window = false;
+void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer) {
+  ImGuiIO& io = ImGui::GetIO();
+
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   // Main loop
@@ -122,21 +122,42 @@ void imguiRunLoop(SDL_Window*& window) {
       continue;
     }
 
+    // Start the Dear ImGui frame
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("Another Window", &done);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+    ImGui::Text("Hello from another window!");
+    if (ImGui::Button("Close Me"))
+      done = false;
+    ImGui::End();
+
+    ImGui::Render();
+    SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+    SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+    SDL_RenderClear(renderer);
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+    SDL_RenderPresent(renderer);
+
   }
 }
 
 int RunGuiMode(Parser& parser) {
+  if (false) {
+    parser.Parse("lol");
+  }
   SDL_Window* window;
+  SDL_Renderer* renderer;
 
-  imguiSpinUp(window);
+  imguiSpinUp(window, renderer);
 
   Parser baseParser = Parser();
   vector<HistoryEntry> history = vector<HistoryEntry>();
   string input = "lol";
 
-  imguiRunLoop(window);
+  imguiRunLoop(window, renderer);
 
-  DrawCalculator(baseParser, input, history);
+  //DrawCalculator(baseParser, input, history);
 
 
   return 0;
