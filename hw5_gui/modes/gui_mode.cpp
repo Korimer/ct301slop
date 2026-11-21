@@ -34,7 +34,9 @@ bool Evaluate(Parser& parser, const string& expr, string& out) {
 }
 
 // Draws the calculator UI for one frame.
-void DrawCalculator(string& input, bool& shouldExit) {
+void DrawCalculator(Parser& parser, string& input, bool& shouldExit) {
+  static string error;   // last evaluation error, shown under the display
+
   ImGuiIO& io = ImGui::GetIO();
   ImGuiStyle& style = ImGui::GetStyle();
   ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -50,24 +52,47 @@ void DrawCalculator(string& input, bool& shouldExit) {
       ImGuiWindowFlags_NoCollapse |
       ImGuiWindowFlags_NoSavedSettings);
 
+  // Display
   ImGui::Text("%s", input.empty() ? "0" : input.c_str());
+  if (!error.empty())
+    ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", error.c_str());
   ImGui::Separator();
 
-  static const char* keys[4][4] = {
-    {"7", "8", "9", "/"},
-    {"4", "5", "6", "*"},
-    {"1", "2", "3", "-"},
-    {"0", ".", "C", "+"},
+  // Buttons
+  static const char* keys[5][4] = {
+    {"C", "(", ")", "/"},
+    {"7", "8", "9", "*"},
+    {"4", "5", "6", "-"},
+    {"1", "2", "3", "+"},
+    {"0", ".", "Del", "="},
   };
   const float btnW = (ImGui::GetContentRegionAvail().x - 3 * style.ItemSpacing.x) / 4;
   const float btnH = ImGui::GetFrameHeight() * 1.8f;
 
-  for (int r = 0; r < 4; r++) {
+  for (int r = 0; r < 5; r++) {
     for (int c = 0; c < 4; c++) {
       if (c > 0) ImGui::SameLine();
-      if (ImGui::Button(keys[r][c], ImVec2(btnW, btnH))) {
-        if (string(keys[r][c]) == "C") input.clear();
-        else                           input += keys[r][c];
+
+      const string key = keys[r][c];
+
+      if (ImGui::Button(key.c_str(), ImVec2(btnW, btnH))) {
+        error.clear();
+        if (key == "C") {
+          input.clear();
+        } else if (key == "Del") {
+          if (!input.empty())
+            input.pop_back();
+        } else if (key == "=") {
+          if (!input.empty()) {
+            string out;
+            if (Evaluate(parser, input, out))
+              input = out;
+            else
+              error = out;
+          }
+        } else {
+          input += key;
+        }
       }
     }
   }
@@ -138,7 +163,7 @@ void imguiShutdown(SDL_Window* window, SDL_Renderer* renderer) {
   SDL_Quit();
 }
 
-void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer, string& input) {
+void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer, Parser& parser, string& input) {
   ImGuiIO& io = ImGui::GetIO();
 
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -168,7 +193,7 @@ void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer, string& input) {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    DrawCalculator(input, done);
+    DrawCalculator(parser, input, done);
 
     ImGui::Render();
     SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
@@ -180,15 +205,13 @@ void imguiRunLoop(SDL_Window*& window, SDL_Renderer*& renderer, string& input) {
 }
 
 int RunGuiMode(Parser& parser) {
-  (void)parser;   // will be used when the "=" button is added
-
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
   if (!imguiSpinUp(window, renderer))
     return 1;
 
   string input;
-  imguiRunLoop(window, renderer, input);
+  imguiRunLoop(window, renderer, parser, input);
 
   imguiShutdown(window, renderer);
   return 0;
