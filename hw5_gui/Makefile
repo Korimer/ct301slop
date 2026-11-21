@@ -11,8 +11,8 @@ MAIN    = calc.cpp
 HWNUM   = HW5
 TARNAME = kaden_love
 
-SRC    = $(filter-out $(MAIN), $(wildcard *.cpp))
-HEADER = $(wildcard *.h)
+SRC    = $(filter-out $(MAIN), $(wildcard *.cpp modes/*.cpp))
+HEADER = $(wildcard *.h modes/*.h)
 OBJ    = $(SRC:.cpp=.o)
 
 # ImGui sources, bundled in ./imgui
