@@ -1,4 +1,6 @@
 .ccls-cache
+.clangd
+.nix-deps
 .direnv
 *.tar
 calculator
