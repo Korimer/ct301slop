@@ -12,8 +12,10 @@
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [
+        # tools that run on the build machine
+        nativeBuildInputs = with pkgs; [
           gcc
+          gnumake
           gdb
           cmake
           ninja
@@ -21,9 +23,17 @@
           clang-tools
         ];
 
+        # libraries you compile and link against
+        buildInputs = with pkgs; [
+          SDL2
+          SDL2.dev
+          libx11          # X11/Xlib.h (needed by SDL_syswm.h)
+        ];
+
         shellHook = ''
           echo "C++ dev environment ready"
           echo "gcc: $(gcc --version | head -n1)"
+          echo "sdl2: $(sdl2-config --version)"
         '';
       };
     };

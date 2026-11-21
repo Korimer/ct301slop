@@ -1,4 +1,5 @@
 .ccls-cache
+.direnv
 *.tar
 calculator
 element
