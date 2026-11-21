@@ -17,6 +17,11 @@ IMGUI_OBJ = $(addprefix $(IMGUI)/, imgui.o imgui_draw.o imgui_tables.o imgui_wid
 
 # ---------------------------------------------------------------------------
 # SDL2 detection: warn loudly if SDL.h / libsdl2 is missing
+#
+# Windows (MinGW): install SDL2 through MSYS2, then build from the
+# "MSYS2 MinGW 64-bit" shell (not the plain MSYS shell), so that g++ and
+# sdl2-config both come from the mingw64 toolchain:
+#     pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-toolchain
 # ---------------------------------------------------------------------------
 SDL_CONFIG := $(shell command -v sdl2-config 2>/dev/null)
 
@@ -43,6 +48,8 @@ ifeq ($(SDL_MISSING),1)
   $(warning #     Fedora:         sudo dnf install SDL2-devel              #)
   $(warning #     Arch:           sudo pacman -S sdl2                      #)
   $(warning #     macOS (brew):   brew install sdl2                        #)
+  $(warning #     Windows MinGW:  pacman -S mingw-w64-x86_64-SDL2          #)
+  $(warning #                     (run from the MSYS2 MinGW64 shell)       #)
   $(warning #                                                              #)
   $(warning #   The build will almost certainly fail without it.           #)
   $(warning #                                                              #)
